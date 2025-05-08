@@ -23,9 +23,10 @@ class Timer:
         self.repeatInterval = 500
         self.lastSignal = 0
 
-    def timeElapsed(self, current_time):
-        if current_time - self.lastSignal >= self.repeatInterval:
-            self.lastSignal += self.repeatInterval
+    def timeElapsed(self, current_delta):
+        self.lastSignal += current_delta
+        if self.lastSignal >= self.repeatInterval:
+            self.lastSignal = 0
             return True
         return False
 
@@ -46,7 +47,13 @@ class Player: #Everything connected to player
     def move(self, dx, dy):
         new_x = self.x + dx
         new_y = self.y + dy
-        if (maze.mazeMap[new_y][new_x] != -1):
+        serial.write_line(str(new_x))
+        serial.write_line(str(new_y))
+        if (new_x < 0 or new_x > maze.size):
+            pass
+        elif (new_y < 0 or new_y > maze.size):
+            pass
+        elif (maze.mazeMap[new_y][new_x] != -1):
             self.x = new_x
             self.y = new_y
 
@@ -119,28 +126,37 @@ comunicator = Comunicator()
 MONSTERS = [Monster("Zombie", 3, 1), Monster("Skeleton", 3, 2)]
 maze = Maze()
 #button = Buttons()
+last_time = 0
 x_timer = Timer()
 y_timer = Timer()
-last_time = 0
 game_loop = True
 
 def setup():
     maze.resetMap()
+    maze.displayMap()
     last_time = control.millis()
     return
 
 setup()
 while game_loop:
     now = control.millis()
-    delta = now - last_time #This part is NOT technically not necessary, question for future
+    delta = now - last_time
     last_time = now
 
-    if (joystickbit.get_rocker_value(joystickbit.rockerType.X) < 450 and x_timer.timeElapsed(now)):
+    if (joystickbit.get_rocker_value(joystickbit.rockerType.X) < 450 and x_timer.timeElapsed(delta)):
+        serial.write_line("joystick activated +X")
         player.move(1, 0)
-    elif (joystickbit.get_rocker_value(joystickbit.rockerType.X) > 570 and x_timer.timeElapsed(now)):
+        maze.displayMap()
+    elif (joystickbit.get_rocker_value(joystickbit.rockerType.X) > 570 and x_timer.timeElapsed(delta)):
+        serial.write_line("joystick activated -X")
         player.move(-1, 0)
+        maze.displayMap()
 
-    if (joystickbit.get_rocker_value(joystickbit.rockerType.Y) < 450 and y_timer.timeElapsed(now)):
+    if (joystickbit.get_rocker_value(joystickbit.rockerType.Y) < 450 and y_timer.timeElapsed(delta)):
+        serial.write_line("joystick activated +Y")
         player.move(0, 1)
-    elif (joystickbit.get_rocker_value(joystickbit.rockerType.Y) > 570 and y_timer.timeElapsed(now)):
+        maze.displayMap()
+    elif (joystickbit.get_rocker_value(joystickbit.rockerType.Y) > 570 and y_timer.timeElapsed(delta)):
+        serial.write_line("joystick activated -Y")
         player.move(0, -1)
+        maze.displayMap()

@@ -25,9 +25,10 @@ class Timer {
         this.lastSignal = 0
     }
     
-    public timeElapsed(current_time: number): boolean {
-        if (current_time - this.lastSignal >= this.repeatInterval) {
-            this.lastSignal += this.repeatInterval
+    public timeElapsed(current_delta: number): boolean {
+        this.lastSignal += current_delta
+        if (this.lastSignal >= this.repeatInterval) {
+            this.lastSignal = 0
             return true
         }
         
@@ -62,7 +63,13 @@ class Player {
     public move(dx: number, dy: number) {
         let new_x = this.x + dx
         let new_y = this.y + dy
-        if (maze.mazeMap[new_y][new_x] != -1) {
+        serial.writeLine("" + new_x)
+        serial.writeLine("" + new_y)
+        if (new_x < 0 || new_x > maze.size) {
+            
+        } else if (new_y < 0 || new_y > maze.size) {
+            
+        } else if (maze.mazeMap[new_y][new_x] != -1) {
             this.x = new_x
             this.y = new_y
         }
@@ -152,12 +159,13 @@ let comunicator = new Comunicator()
 let MONSTERS = [new Monster("Zombie", 3, 1), new Monster("Skeleton", 3, 2)]
 let maze = new Maze()
 // button = Buttons()
+let last_time = 0
 let x_timer = new Timer()
 let y_timer = new Timer()
-let last_time = 0
 let game_loop = true
 function setup() {
     maze.resetMap()
+    maze.displayMap()
     let last_time = control.millis()
     return
 }
@@ -166,18 +174,25 @@ setup()
 while (game_loop) {
     now = control.millis()
     delta = now - last_time
-    // This part is NOT technically not necessary, question for future
     last_time = now
-    if (joystickbit.getRockerValue(joystickbit.rockerType.X) < 450 && x_timer.timeElapsed(now)) {
+    if (joystickbit.getRockerValue(joystickbit.rockerType.X) < 450 && x_timer.timeElapsed(delta)) {
+        serial.writeLine("joystick activated +X")
         player.move(1, 0)
-    } else if (joystickbit.getRockerValue(joystickbit.rockerType.X) > 570 && x_timer.timeElapsed(now)) {
+        maze.displayMap()
+    } else if (joystickbit.getRockerValue(joystickbit.rockerType.X) > 570 && x_timer.timeElapsed(delta)) {
+        serial.writeLine("joystick activated -X")
         player.move(-1, 0)
+        maze.displayMap()
     }
     
-    if (joystickbit.getRockerValue(joystickbit.rockerType.Y) < 450 && y_timer.timeElapsed(now)) {
+    if (joystickbit.getRockerValue(joystickbit.rockerType.Y) < 450 && y_timer.timeElapsed(delta)) {
+        serial.writeLine("joystick activated +Y")
         player.move(0, 1)
-    } else if (joystickbit.getRockerValue(joystickbit.rockerType.Y) > 570 && y_timer.timeElapsed(now)) {
+        maze.displayMap()
+    } else if (joystickbit.getRockerValue(joystickbit.rockerType.Y) > 570 && y_timer.timeElapsed(delta)) {
+        serial.writeLine("joystick activated -Y")
         player.move(0, -1)
+        maze.displayMap()
     }
     
 }
