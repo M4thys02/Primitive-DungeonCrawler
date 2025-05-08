@@ -7,19 +7,23 @@ class Buttons:
         self.pressed_last = False
 
     
-    def isPressed(self, time, b):
-        pressed = joystickbit.get_button(b)
-        if pressed:
-            self.lastSignal += time
-            if self.lastSignal >= self.repeatInterval:
-                self.lastSignal = 0
-                return True
+    # def isPressed(self, time, b): #When specified button is pressed over specified period of time with autorepeat
+    #     pressed = joystickbit.get_button(b)
+    #     if pressed:
+    #         self.lastSignal += time
+    #         if self.lastSignal >= self.repeatInterval:
+    #             self.lastSignal = 0
+    #             return True
+    #     else:
+    #         self.lastSignal = 0
+    #     return False
+    
+    def timeElapsed(self, time):
+        if (now - self.lastSignal >= self.repeatInterval):
+            self.lastSignal += self.repeatInterval
+            return True
         else:
-            self.lastSignal = 0
-        return False
-
-    def rockerChange(self, time):
-        return False
+            return False
 
 class Player: #Everything connected to player
     def __init__(self):
@@ -106,15 +110,13 @@ class Comunicator: #Handle comunication between Microbits
         radio.set_group(new_group)
         radio.send_string(message)
 
-
 player = Player()
 comunicator = Comunicator()
 MONSTERS = [Monster("Zombie", 3, 1), Monster("Skeleton", 3, 2)]
 maze = Maze()
 button = Buttons()
 last_time = 0
-
-player.move(1, 0) #Minimálně někde musí být tato funkce, protože jinak to dělá neskutečný bordel
+game_loop = True
 
 def setup():
     maze.resetMap()
@@ -122,10 +124,17 @@ def setup():
     return
 
 setup()
-while True:
+while game_loop:
     now = control.millis()
-    delta = now - last_time
+    delta = now - last_time #This part is NOT technically not necessary, question for future
     last_time = now
 
-    if (button.isPressed(delta, joystickbit.JoystickBitPin.P12)):
-        maze.displayMap()
+    if (joystickbit.get_rocker_value(joystickbit.rockerType.X) < 450 and button.timeElapsed(now)):
+        player.move(1, 0)
+    elif (joystickbit.get_rocker_value(joystickbit.rockerType.X) > 570 and button.timeElapsed(now)):
+        player.move(-1, 0)
+
+    if (joystickbit.get_rocker_value(joystickbit.rockerType.Y) < 450 and button.timeElapsed(now)):
+        player.move(0, 1)
+    elif (joystickbit.get_rocker_value(joystickbit.rockerType.Y) > 570 and button.timeElapsed(now)):
+        player.move(0, -1)

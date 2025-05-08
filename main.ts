@@ -12,24 +12,24 @@ class Buttons {
         this.pressed_last = false
     }
     
-    public isPressed(time: number, b: number): boolean {
-        let pressed = joystickbit.getButton(b)
-        if (pressed) {
-            this.lastSignal += time
-            if (this.lastSignal >= this.repeatInterval) {
-                this.lastSignal = 0
-                return true
-            }
-            
+    //  def isPressed(self, time, b): #When specified button is pressed over specified period of time with autorepeat
+    //      pressed = joystickbit.get_button(b)
+    //      if pressed:
+    //          self.lastSignal += time
+    //          if self.lastSignal >= self.repeatInterval:
+    //              self.lastSignal = 0
+    //              return True
+    //      else:
+    //          self.lastSignal = 0
+    //      return False
+    public timeElapsed(time: number): boolean {
+        if (now - this.lastSignal >= this.repeatInterval) {
+            this.lastSignal += this.repeatInterval
+            return true
         } else {
-            this.lastSignal = 0
+            return false
         }
         
-        return false
-    }
-    
-    public rockerChange(time: any): boolean {
-        return false
     }
     
 }
@@ -151,8 +151,7 @@ let MONSTERS = [new Monster("Zombie", 3, 1), new Monster("Skeleton", 3, 2)]
 let maze = new Maze()
 let button = new Buttons()
 let last_time = 0
-player.move(1, 0)
-// Minimálně někde musí být tato funkce, protože jinak to dělá neskutečný bordel
+let game_loop = true
 function setup() {
     maze.resetMap()
     let last_time = control.millis()
@@ -160,12 +159,21 @@ function setup() {
 }
 
 setup()
-while (true) {
+while (game_loop) {
     now = control.millis()
     delta = now - last_time
+    // This part is NOT technically not necessary, question for future
     last_time = now
-    if (button.isPressed(delta, joystickbit.JoystickBitPin.P12)) {
-        maze.displayMap()
+    if (joystickbit.getRockerValue(joystickbit.rockerType.X) < 450 && button.timeElapsed(now)) {
+        player.move(1, 0)
+    } else if (joystickbit.getRockerValue(joystickbit.rockerType.X) > 570 && button.timeElapsed(now)) {
+        player.move(-1, 0)
+    }
+    
+    if (joystickbit.getRockerValue(joystickbit.rockerType.Y) < 450 && button.timeElapsed(now)) {
+        player.move(0, 1)
+    } else if (joystickbit.getRockerValue(joystickbit.rockerType.Y) > 570 && button.timeElapsed(now)) {
+        player.move(0, -1)
     }
     
 }
