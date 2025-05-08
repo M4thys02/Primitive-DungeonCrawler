@@ -34,7 +34,13 @@ class Player: #Everything connected to player
     def __init__(self):
         self.hp = 3
         self.stamina = 4
-        self.inventory = []
+        self.inventory = [images.create_image("""
+            . . . # #
+            . . # # .
+            . . # . .
+            # # # . .
+            . # . . .
+            """)]
         self.x = 0
         self.y = 0
     
@@ -43,6 +49,10 @@ class Player: #Everything connected to player
 
     def update_stamina(self, change):
         self.stamina += change
+    
+    def show_inv_image(self):
+        self.inventory[0].show_image(0)
+        
 
     def move(self, dx, dy):
         new_x = self.x + dx
@@ -128,6 +138,7 @@ comunicator = Comunicator()
 MONSTERS = [Monster("Zombie", 3, 1), Monster("Skeleton", 3, 2)]
 maze = Maze()
 #button = Buttons()
+
 last_time = 0
 x_timer = Timer()
 y_timer = Timer()
@@ -137,6 +148,8 @@ def setup():
     maze.resetMap()
     maze.displayMap()
     last_time = control.millis()
+
+    player.show_inv_image()
     return
 
 setup()

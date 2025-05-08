@@ -40,14 +40,20 @@ class Timer {
 class Player {
     hp: number
     stamina: number
-    inventory: any[]
+    inventory: Image[]
     x: number
     y: number
     // Everything connected to player
     constructor() {
         this.hp = 3
         this.stamina = 4
-        this.inventory = []
+        this.inventory = [images.createImage(`
+            . . . # #
+            . . # # .
+            . . # . .
+            # # # . .
+            . # . . .
+            `)]
         this.x = 0
         this.y = 0
     }
@@ -58,6 +64,10 @@ class Player {
     
     public update_stamina(change: any) {
         this.stamina += change
+    }
+    
+    public show_inv_image() {
+        this.inventory[0].showImage(0)
     }
     
     public move(dx: number, dy: number) {
@@ -169,6 +179,7 @@ function setup() {
     maze.resetMap()
     maze.displayMap()
     let last_time = control.millis()
+    player.show_inv_image()
     return
 }
 
