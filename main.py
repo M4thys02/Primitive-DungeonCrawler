@@ -1,5 +1,26 @@
 joystickbit.init_joystick_bit() #Initialize joystickbit
 
+class Buttons:
+    def __init__(self):
+        self.repeatInterval = 500
+        self.lastSignal = 0
+        self.pressed_last = False
+
+    
+    def isPressed(self, time, b):
+        pressed = joystickbit.get_button(b)
+        if pressed:
+            self.lastSignal += time
+            if self.lastSignal >= self.repeatInterval:
+                self.lastSignal = 0
+                return True
+        else:
+            self.lastSignal = 0
+        return False
+
+    def rockerChange(self, time):
+        return False
+
 class Player: #Everything connected to player
     def __init__(self):
         self.hp = 3
@@ -7,10 +28,19 @@ class Player: #Everything connected to player
         self.inventory = []
         self.x = 0
         self.y = 0
-        self.validMovement = [[-1, 0], [1, 0], [0, -1], [0, 1]]
+    
+    def update_hp(self, change):
+        self.hp += change
 
-    def move_left(self):
-        basic.show_number(8)
+    def update_stamina(self, change):
+        self.stamina += change
+
+    def move(self, dx, dy):
+        new_x = self.x + dx
+        new_y = self.y + dy
+        if (maze.mazeMap[new_y][new_x] != -1):
+            self.x = new_x
+            self.y = new_y
 
 class Monster: #Class for every monster
     def __init__(self, name, hp, attack):
@@ -46,6 +76,12 @@ class Maze: #Class for maze handling
                         [0,0,0,0,0],
                         [0,0,0,0,0]]
     
+    def resetMap(self):
+        for i in range(self.microbitsLEDS):
+            for j in range(self.microbitsLEDS):
+                if self.mazeMap[j][i] == 1:
+                    self.mazeMap[j][i] = 0
+    
     def displayMap(self):
         for i in range(self.microbitsLEDS):
             row = ""
@@ -75,9 +111,21 @@ player = Player()
 comunicator = Comunicator()
 MONSTERS = [Monster("Zombie", 3, 1), Monster("Skeleton", 3, 2)]
 maze = Maze()
+button = Buttons()
+last_time = 0
+
+player.move(1, 0) #Minimálně někde musí být tato funkce, protože jinak to dělá neskutečný bordel
 
 def setup():
+    maze.resetMap()
+    last_time = control.millis()
     return
 
+setup()
 while True:
-    maze.displayMap()
+    now = control.millis()
+    delta = now - last_time
+    last_time = now
+
+    if (button.isPressed(delta, joystickbit.JoystickBitPin.P12)):
+        maze.displayMap()

@@ -1,12 +1,45 @@
+let now: number;
+let delta: number;
 joystickbit.initJoystickBit()
 // Initialize joystickbit
+class Buttons {
+    repeatInterval: number
+    lastSignal: number
+    pressed_last: boolean
+    constructor() {
+        this.repeatInterval = 500
+        this.lastSignal = 0
+        this.pressed_last = false
+    }
+    
+    public isPressed(time: number, b: number): boolean {
+        let pressed = joystickbit.getButton(b)
+        if (pressed) {
+            this.lastSignal += time
+            if (this.lastSignal >= this.repeatInterval) {
+                this.lastSignal = 0
+                return true
+            }
+            
+        } else {
+            this.lastSignal = 0
+        }
+        
+        return false
+    }
+    
+    public rockerChange(time: any): boolean {
+        return false
+    }
+    
+}
+
 class Player {
     hp: number
     stamina: number
     inventory: any[]
     x: number
     y: number
-    validMovement: any[][]
     // Everything connected to player
     constructor() {
         this.hp = 3
@@ -14,11 +47,24 @@ class Player {
         this.inventory = []
         this.x = 0
         this.y = 0
-        this.validMovement = [[-1, 0], [1, 0], [0, -1], [0, 1]]
     }
     
-    public move_left() {
-        basic.showNumber(8)
+    public update_hp(change: any) {
+        this.hp += change
+    }
+    
+    public update_stamina(change: any) {
+        this.stamina += change
+    }
+    
+    public move(dx: number, dy: number) {
+        let new_x = this.x + dx
+        let new_y = this.y + dy
+        if (maze.mazeMap[new_y][new_x] != -1) {
+            this.x = new_x
+            this.y = new_y
+        }
+        
     }
     
 }
@@ -51,6 +97,17 @@ class Maze {
     // Upper right
     // Lower left
     // Lower right
+    public resetMap() {
+        for (let i = 0; i < this.microbitsLEDS; i++) {
+            for (let j = 0; j < this.microbitsLEDS; j++) {
+                if (this.mazeMap[j][i] == 1) {
+                    this.mazeMap[j][i] = 0
+                }
+                
+            }
+        }
+    }
+    
     public displayMap() {
         let row: string;
         for (let i = 0; i < this.microbitsLEDS; i++) {
@@ -92,10 +149,23 @@ let player = new Player()
 let comunicator = new Comunicator()
 let MONSTERS = [new Monster("Zombie", 3, 1), new Monster("Skeleton", 3, 2)]
 let maze = new Maze()
+let button = new Buttons()
+let last_time = 0
+player.move(1, 0)
+// Minimálně někde musí být tato funkce, protože jinak to dělá neskutečný bordel
 function setup() {
+    maze.resetMap()
+    let last_time = control.millis()
     return
 }
 
+setup()
 while (true) {
-    maze.displayMap()
+    now = control.millis()
+    delta = now - last_time
+    last_time = now
+    if (button.isPressed(delta, joystickbit.JoystickBitPin.P12)) {
+        maze.displayMap()
+    }
+    
 }
