@@ -1,29 +1,33 @@
 joystickbit.init_joystick_bit() #Initialize joystickbit
 
-class Buttons:
+# class Buttons:
+#     def __init__(self):
+#         self.repeatInterval = 500
+#         self.lastSignal = 0
+#         self.pressed_last = False
+
+    
+#     def isPressed(self, time, b): #When specified button is pressed over specified period of time with autorepeat
+#         pressed = joystickbit.get_button(b)
+#         if pressed:
+#             self.lastSignal += time
+#             if self.lastSignal >= self.repeatInterval:
+#                 self.lastSignal = 0
+#                 return True
+#         else:
+#             self.lastSignal = 0
+#         return False
+
+class Timer:
     def __init__(self):
         self.repeatInterval = 500
         self.lastSignal = 0
-        self.pressed_last = False
 
-    
-    # def isPressed(self, time, b): #When specified button is pressed over specified period of time with autorepeat
-    #     pressed = joystickbit.get_button(b)
-    #     if pressed:
-    #         self.lastSignal += time
-    #         if self.lastSignal >= self.repeatInterval:
-    #             self.lastSignal = 0
-    #             return True
-    #     else:
-    #         self.lastSignal = 0
-    #     return False
-    
-    def timeElapsed(self, time):
-        if (now - self.lastSignal >= self.repeatInterval):
+    def timeElapsed(self, current_time):
+        if current_time - self.lastSignal >= self.repeatInterval:
             self.lastSignal += self.repeatInterval
             return True
-        else:
-            return False
+        return False
 
 class Player: #Everything connected to player
     def __init__(self):
@@ -114,7 +118,9 @@ player = Player()
 comunicator = Comunicator()
 MONSTERS = [Monster("Zombie", 3, 1), Monster("Skeleton", 3, 2)]
 maze = Maze()
-button = Buttons()
+#button = Buttons()
+x_timer = Timer()
+y_timer = Timer()
 last_time = 0
 game_loop = True
 
@@ -129,12 +135,12 @@ while game_loop:
     delta = now - last_time #This part is NOT technically not necessary, question for future
     last_time = now
 
-    if (joystickbit.get_rocker_value(joystickbit.rockerType.X) < 450 and button.timeElapsed(now)):
+    if (joystickbit.get_rocker_value(joystickbit.rockerType.X) < 450 and x_timer.timeElapsed(now)):
         player.move(1, 0)
-    elif (joystickbit.get_rocker_value(joystickbit.rockerType.X) > 570 and button.timeElapsed(now)):
+    elif (joystickbit.get_rocker_value(joystickbit.rockerType.X) > 570 and x_timer.timeElapsed(now)):
         player.move(-1, 0)
 
-    if (joystickbit.get_rocker_value(joystickbit.rockerType.Y) < 450 and button.timeElapsed(now)):
+    if (joystickbit.get_rocker_value(joystickbit.rockerType.Y) < 450 and y_timer.timeElapsed(now)):
         player.move(0, 1)
-    elif (joystickbit.get_rocker_value(joystickbit.rockerType.Y) > 570 and button.timeElapsed(now)):
+    elif (joystickbit.get_rocker_value(joystickbit.rockerType.Y) > 570 and y_timer.timeElapsed(now)):
         player.move(0, -1)

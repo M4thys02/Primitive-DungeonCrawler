@@ -2,34 +2,36 @@ let now: number;
 let delta: number;
 joystickbit.initJoystickBit()
 // Initialize joystickbit
-class Buttons {
+//  class Buttons:
+//      def __init__(self):
+//          self.repeatInterval = 500
+//          self.lastSignal = 0
+//          self.pressed_last = False
+//      def isPressed(self, time, b): #When specified button is pressed over specified period of time with autorepeat
+//          pressed = joystickbit.get_button(b)
+//          if pressed:
+//              self.lastSignal += time
+//              if self.lastSignal >= self.repeatInterval:
+//                  self.lastSignal = 0
+//                  return True
+//          else:
+//              self.lastSignal = 0
+//          return False
+class Timer {
     repeatInterval: number
     lastSignal: number
-    pressed_last: boolean
     constructor() {
         this.repeatInterval = 500
         this.lastSignal = 0
-        this.pressed_last = false
     }
     
-    //  def isPressed(self, time, b): #When specified button is pressed over specified period of time with autorepeat
-    //      pressed = joystickbit.get_button(b)
-    //      if pressed:
-    //          self.lastSignal += time
-    //          if self.lastSignal >= self.repeatInterval:
-    //              self.lastSignal = 0
-    //              return True
-    //      else:
-    //          self.lastSignal = 0
-    //      return False
-    public timeElapsed(time: number): boolean {
-        if (now - this.lastSignal >= this.repeatInterval) {
+    public timeElapsed(current_time: number): boolean {
+        if (current_time - this.lastSignal >= this.repeatInterval) {
             this.lastSignal += this.repeatInterval
             return true
-        } else {
-            return false
         }
         
+        return false
     }
     
 }
@@ -149,7 +151,9 @@ let player = new Player()
 let comunicator = new Comunicator()
 let MONSTERS = [new Monster("Zombie", 3, 1), new Monster("Skeleton", 3, 2)]
 let maze = new Maze()
-let button = new Buttons()
+// button = Buttons()
+let x_timer = new Timer()
+let y_timer = new Timer()
 let last_time = 0
 let game_loop = true
 function setup() {
@@ -164,15 +168,15 @@ while (game_loop) {
     delta = now - last_time
     // This part is NOT technically not necessary, question for future
     last_time = now
-    if (joystickbit.getRockerValue(joystickbit.rockerType.X) < 450 && button.timeElapsed(now)) {
+    if (joystickbit.getRockerValue(joystickbit.rockerType.X) < 450 && x_timer.timeElapsed(now)) {
         player.move(1, 0)
-    } else if (joystickbit.getRockerValue(joystickbit.rockerType.X) > 570 && button.timeElapsed(now)) {
+    } else if (joystickbit.getRockerValue(joystickbit.rockerType.X) > 570 && x_timer.timeElapsed(now)) {
         player.move(-1, 0)
     }
     
-    if (joystickbit.getRockerValue(joystickbit.rockerType.Y) < 450 && button.timeElapsed(now)) {
+    if (joystickbit.getRockerValue(joystickbit.rockerType.Y) < 450 && y_timer.timeElapsed(now)) {
         player.move(0, 1)
-    } else if (joystickbit.getRockerValue(joystickbit.rockerType.Y) > 570 && button.timeElapsed(now)) {
+    } else if (joystickbit.getRockerValue(joystickbit.rockerType.Y) > 570 && y_timer.timeElapsed(now)) {
         player.move(0, -1)
     }
     
