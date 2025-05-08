@@ -63,13 +63,15 @@ class Player {
     public move(dx: number, dy: number) {
         let new_x = this.x + dx
         let new_y = this.y + dy
-        serial.writeLine("" + new_x)
-        serial.writeLine("" + new_y)
+        //  serial.write_line(str(new_x)) #Only for debugging pusrposes
+        //  serial.write_line(str(new_y))
         if (new_x < 0 || new_x > maze.size) {
             
         } else if (new_y < 0 || new_y > maze.size) {
             
         } else if (maze.mazeMap[new_y][new_x] != -1) {
+            maze.mazeMap[this.x][this.y] = 0
+            maze.mazeMap[new_x][new_y] = 1
             this.x = new_x
             this.y = new_y
         }
@@ -176,21 +178,17 @@ while (game_loop) {
     delta = now - last_time
     last_time = now
     if (joystickbit.getRockerValue(joystickbit.rockerType.X) < 450 && x_timer.timeElapsed(delta)) {
-        serial.writeLine("joystick activated +X")
         player.move(1, 0)
         maze.displayMap()
     } else if (joystickbit.getRockerValue(joystickbit.rockerType.X) > 570 && x_timer.timeElapsed(delta)) {
-        serial.writeLine("joystick activated -X")
         player.move(-1, 0)
         maze.displayMap()
     }
     
     if (joystickbit.getRockerValue(joystickbit.rockerType.Y) < 450 && y_timer.timeElapsed(delta)) {
-        serial.writeLine("joystick activated +Y")
         player.move(0, 1)
         maze.displayMap()
     } else if (joystickbit.getRockerValue(joystickbit.rockerType.Y) > 570 && y_timer.timeElapsed(delta)) {
-        serial.writeLine("joystick activated -Y")
         player.move(0, -1)
         maze.displayMap()
     }

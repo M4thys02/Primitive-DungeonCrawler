@@ -47,13 +47,15 @@ class Player: #Everything connected to player
     def move(self, dx, dy):
         new_x = self.x + dx
         new_y = self.y + dy
-        serial.write_line(str(new_x))
-        serial.write_line(str(new_y))
+        # serial.write_line(str(new_x)) #Only for debugging pusrposes
+        # serial.write_line(str(new_y))
         if (new_x < 0 or new_x > maze.size):
             pass
         elif (new_y < 0 or new_y > maze.size):
             pass
         elif (maze.mazeMap[new_y][new_x] != -1):
+            maze.mazeMap[self.x][self.y] = 0
+            maze.mazeMap[new_x][new_y] = 1
             self.x = new_x
             self.y = new_y
 
@@ -144,19 +146,15 @@ while game_loop:
     last_time = now
 
     if (joystickbit.get_rocker_value(joystickbit.rockerType.X) < 450 and x_timer.timeElapsed(delta)):
-        serial.write_line("joystick activated +X")
         player.move(1, 0)
         maze.displayMap()
     elif (joystickbit.get_rocker_value(joystickbit.rockerType.X) > 570 and x_timer.timeElapsed(delta)):
-        serial.write_line("joystick activated -X")
         player.move(-1, 0)
         maze.displayMap()
 
     if (joystickbit.get_rocker_value(joystickbit.rockerType.Y) < 450 and y_timer.timeElapsed(delta)):
-        serial.write_line("joystick activated +Y")
         player.move(0, 1)
         maze.displayMap()
     elif (joystickbit.get_rocker_value(joystickbit.rockerType.Y) > 570 and y_timer.timeElapsed(delta)):
-        serial.write_line("joystick activated -Y")
         player.move(0, -1)
         maze.displayMap()
