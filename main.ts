@@ -80,8 +80,9 @@ class Player {
         } else if (new_y < 0 || new_y > maze.size) {
             
         } else if (maze.mazeMap[new_y][new_x] != -1) {
-            maze.mazeMap[this.x][this.y] = 0
-            maze.mazeMap[new_x][new_y] = 1
+            maze.mazeMap[this.y][this.x] = 0
+            maze.mazeMap[new_y][new_x] = 2
+            // player is number 2
             this.x = new_x
             this.y = new_y
         }
@@ -111,7 +112,7 @@ class Maze {
     constructor() {
         this.size = 10
         this.microbitsLEDS = 5
-        this.mazeMap = [[0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 1], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]]
+        this.mazeMap = [[0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 1, 0, 0], [0, 1, 0, 1, 0], [0, 0, 1, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]]
     }
     
     // Upper left
@@ -121,7 +122,7 @@ class Maze {
     public resetMap() {
         for (let i = 0; i < this.microbitsLEDS; i++) {
             for (let j = 0; j < this.microbitsLEDS; j++) {
-                if (this.mazeMap[j][i] == 1) {
+                if (this.mazeMap[j][i] != 0) {
                     this.mazeMap[j][i] = 0
                 }
                 
@@ -176,7 +177,8 @@ let x_timer = new Timer()
 let y_timer = new Timer()
 let game_loop = true
 function setup() {
-    maze.resetMap()
+    // maze.resetMap()
+    player.move(0, 0)
     maze.displayMap()
     let last_time = control.millis()
     player.show_inv_image()

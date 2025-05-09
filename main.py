@@ -64,8 +64,8 @@ class Player: #Everything connected to player
         elif (new_y < 0 or new_y > maze.size):
             pass
         elif (maze.mazeMap[new_y][new_x] != -1):
-            maze.mazeMap[self.x][self.y] = 0
-            maze.mazeMap[new_x][new_y] = 1
+            maze.mazeMap[self.y][self.x] = 0
+            maze.mazeMap[new_y][new_x] = 2 #player is number 2
             self.x = new_x
             self.y = new_y
 
@@ -81,9 +81,9 @@ class Maze: #Class for maze handling
         self.microbitsLEDS = 5
         self.mazeMap = [[0,0,0,0,0], #Upper left
                         [0,0,0,0,0],
-                        [0,0,0,0,0],
-                        [0,0,0,0,0],
-                        [0,0,0,0,1],
+                        [0,0,1,0,0],
+                        [0,1,0,1,0],
+                        [0,0,1,0,0],
                         
                         [0,0,0,0,0], #Upper right
                         [0,0,0,0,0],
@@ -106,7 +106,7 @@ class Maze: #Class for maze handling
     def resetMap(self):
         for i in range(self.microbitsLEDS):
             for j in range(self.microbitsLEDS):
-                if self.mazeMap[j][i] == 1:
+                if self.mazeMap[j][i] != 0:
                     self.mazeMap[j][i] = 0
     
     def displayMap(self):
@@ -145,7 +145,8 @@ y_timer = Timer()
 game_loop = True
 
 def setup():
-    maze.resetMap()
+    #maze.resetMap()
+    player.move(0,0)
     maze.displayMap()
     last_time = control.millis()
 
