@@ -71,16 +71,16 @@ class Player: #Everything connected to player
     def move(self, dx, dy):
         new_x = self.x + dx
         new_y = self.y + dy
-        #serial.write_line(str(new_x)) #Only for debugging pusrposes
-        #serial.write_line(str(new_y))
-        #serial.write_line(str(maze.mazeMap[new_x][new_y]))
+        # serial.write_line(str(new_x)) #Only for debugging pusrposes
+        # serial.write_line(str(new_y))
+        # serial.write_line(str(maze.mazeMap[new_x][new_y]))
         if (new_x < 0 or new_x > maze.size):
             pass
         elif (new_y < 0 or new_y > maze.size):
             pass
         elif (maze.mazeMap[new_y][new_x] == 0):
-            maze.mazeMap[self.x][self.y] = 0
-            maze.mazeMap[new_x][new_y] = 2 #player is number 2
+            maze.mazeMap[self.y][self.x] = 0
+            maze.mazeMap[new_y][new_x] = 2 #player is number 2
             self.x = new_x
             self.y = new_y
 
@@ -121,21 +121,23 @@ class Maze: #Class for maze handling
             rowB = ""
             for j in range(self.size):
                 val = self.mazeMap[i][j]
-                if (j > 4):
-                    if (i < self.size / 2):
-                        comunicator.broadcastMessage(4, rowA + " " + str(i))
-                    else:
-                        comunicator.broadcastMessage(6, rowA + " " + str(i - 5))
-                    rowB += str(val)
-                else:
+                if j < 5:
                     rowA += str(val)
-            if (i < self.size / 2):
-                comunicator.broadcastMessage(5, rowB + " " + str(i))
-            else:
-                comunicator.broadcastMessage(7, rowB + " " + str(i - 5))
+                else:
+                    rowB += str(val)
             
-            serial.write_line(rowA)
-            serial.write_line(rowB)
+            if i < self.size / 2:
+                # Upper half
+                serial.write_line("Upper - rowA:" + rowA)
+                serial.write_line("Upper - rowB:" + rowB)
+                comunicator.broadcastMessage(4, rowA + " " + str(i))  # Upper right
+                comunicator.broadcastMessage(5, rowB + " " + str(i))  # Upper left
+            else:
+                # Lower half
+                serial.write_line("Lower - rowA:" + rowA)
+                serial.write_line("Lower - rowB:" + rowB)
+                comunicator.broadcastMessage(6, rowA + " " + str(i - 5))  # Lower left
+                comunicator.broadcastMessage(7, rowB + " " + str(i - 5))  # Lower right
 
 class Comunicator: #Handle comunication between Microbits
     def __init__(self):

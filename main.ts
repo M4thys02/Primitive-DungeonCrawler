@@ -78,16 +78,16 @@ class Player {
     public move(dx: number, dy: number) {
         let new_x = this.x + dx
         let new_y = this.y + dy
-        // serial.write_line(str(new_x)) #Only for debugging pusrposes
-        // serial.write_line(str(new_y))
-        // serial.write_line(str(maze.mazeMap[new_x][new_y]))
+        //  serial.write_line(str(new_x)) #Only for debugging pusrposes
+        //  serial.write_line(str(new_y))
+        //  serial.write_line(str(maze.mazeMap[new_x][new_y]))
         if (new_x < 0 || new_x > maze.size) {
             
         } else if (new_y < 0 || new_y > maze.size) {
             
         } else if (maze.mazeMap[new_y][new_x] == 0) {
-            maze.mazeMap[this.x][this.y] = 0
-            maze.mazeMap[new_x][new_y] = 2
+            maze.mazeMap[this.y][this.x] = 0
+            maze.mazeMap[new_y][new_x] = 2
             // player is number 2
             this.x = new_x
             this.y = new_y
@@ -146,32 +146,36 @@ class Maze {
             rowB = ""
             for (let j = 0; j < this.size; j++) {
                 val = this.mazeMap[i][j]
-                if (j > 4) {
-                    if (i < this.size / 2) {
-                        comunicator.broadcastMessage(4, rowA + " " + ("" + i))
-                    } else {
-                        comunicator.broadcastMessage(6, rowA + " " + ("" + (i - 5)))
-                    }
-                    
-                    rowB += "" + val
-                } else {
+                if (j < 5) {
                     rowA += "" + val
+                } else {
+                    rowB += "" + val
                 }
                 
             }
             if (i < this.size / 2) {
+                //  Upper half
+                serial.writeLine("Upper - rowA:" + rowA)
+                serial.writeLine("Upper - rowB:" + rowB)
+                comunicator.broadcastMessage(4, rowA + " " + ("" + i))
+                //  Upper right
                 comunicator.broadcastMessage(5, rowB + " " + ("" + i))
             } else {
+                //  Upper left
+                //  Lower half
+                serial.writeLine("Lower - rowA:" + rowA)
+                serial.writeLine("Lower - rowB:" + rowB)
+                comunicator.broadcastMessage(6, rowA + " " + ("" + (i - 5)))
+                //  Lower left
                 comunicator.broadcastMessage(7, rowB + " " + ("" + (i - 5)))
             }
             
-            serial.writeLine(rowA)
-            serial.writeLine(rowB)
         }
     }
     
 }
 
+//  Lower right
 class Comunicator {
     defaultRadioGroup: number
     // Handle comunication between Microbits
