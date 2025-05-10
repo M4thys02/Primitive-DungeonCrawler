@@ -63,7 +63,7 @@ class Player: #Everything connected to player
             pass
         elif (new_y < 0 or new_y > maze.size):
             pass
-        elif (maze.mazeMap[new_y][new_x] != -1):
+        elif (maze.mazeMap[new_y][new_x] == 0):
             maze.mazeMap[self.y][self.x] = 0
             maze.mazeMap[new_y][new_x] = 2 #player is number 2
             self.x = new_x
@@ -82,7 +82,7 @@ class Maze: #Class for maze handling
         self.mazeMap = [[0,0,0,0,0], #Upper left
                         [0,0,0,0,0],
                         [0,0,1,0,0],
-                        [0,1,0,1,0],
+                        [0,1,3,1,0],
                         [0,0,1,0,0],
                         
                         [0,0,0,0,0], #Upper right
