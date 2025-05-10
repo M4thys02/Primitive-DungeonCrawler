@@ -80,15 +80,16 @@ class Player {
     public move(dx: number, dy: number) {
         let new_x = this.x + dx
         let new_y = this.y + dy
-        //  serial.write_line(str(new_x)) #Only for debugging pusrposes
-        //  serial.write_line(str(new_y))
+        // serial.write_line(str(new_x)) #Only for debugging pusrposes
+        // serial.write_line(str(new_y))
+        // serial.write_line(str(maze.mazeMap[new_x][new_y]))
         if (new_x < 0 || new_x > maze.size) {
             
         } else if (new_y < 0 || new_y > maze.size) {
             
         } else if (maze.mazeMap[new_y][new_x] == 0) {
-            maze.mazeMap[this.y][this.x] = 0
-            maze.mazeMap[new_y][new_x] = 2
+            maze.mazeMap[this.x][this.y] = 0
+            maze.mazeMap[new_x][new_y] = 2
             // player is number 2
             this.x = new_x
             this.y = new_y
@@ -114,12 +115,14 @@ class Monster {
 class Maze {
     size: number
     microbitsLEDS: number
+    segments: number
     mazeMap: number[][]
     // Class for maze handling
     constructor() {
         this.size = 10
         this.microbitsLEDS = 5
-        this.mazeMap = [[0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 1, 0, 0], [0, 1, 3, 1, 0], [0, 0, 1, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]]
+        this.segments = 4
+        this.mazeMap = [[0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]]
     }
     
     // Upper left
@@ -127,25 +130,35 @@ class Maze {
     // Lower left
     // Lower right
     public resetMap() {
-        this.mazeMap = DEFAULT_MAZE_MAP
+        let new_row: any[];
+        this.mazeMap = []
+        for (let row of DEFAULT_MAZE_MAP) {
+            new_row = []
+            for (let val of row) {
+                new_row.push(val)
+            }
+            this.mazeMap.push(new_row)
+        }
     }
     
     public displayMap() {
         let row: string;
-        for (let i = 0; i < this.microbitsLEDS; i++) {
+        let val: number;
+        for (let i = 0; i < this.segments * this.microbitsLEDS; i++) {
             row = ""
             for (let j = 0; j < this.microbitsLEDS; j++) {
-                row += "" + this.mazeMap[j][i]
+                val = this.mazeMap[i][j]
+                row += "" + val
             }
-            // basic.show_string(row) #Only for debbuging purposes
+            // serial.write_line(row)
             if (i <= 4) {
                 comunicator.broadcastMessage(4, row + " " + ("" + i))
             } else if (i > 4 && i < 10) {
-                comunicator.broadcastMessage(5, row + " " + ("" + i))
+                comunicator.broadcastMessage(5, row + " " + ("" + (i - 5)))
             } else if (i > 9 && i < 15) {
-                comunicator.broadcastMessage(6, row + " " + ("" + i))
+                comunicator.broadcastMessage(6, row + " " + ("" + (i - 10)))
             } else {
-                comunicator.broadcastMessage(7, row + " " + ("" + i))
+                comunicator.broadcastMessage(7, row + " " + ("" + (i - 15)))
             }
             
         }
@@ -183,8 +196,8 @@ let y_timer = new Timer()
 let game_loop = true
 function setup() {
     maze.resetMap()
-    player.x = 7
-    player.y = 7
+    player.x = 2
+    player.y = 2
     player.move(0, 0)
     maze.displayMap()
     let last_time = control.millis()

@@ -83,15 +83,16 @@ class Player: #Everything connected to player
     def move(self, dx, dy):
         new_x = self.x + dx
         new_y = self.y + dy
-        # serial.write_line(str(new_x)) #Only for debugging pusrposes
-        # serial.write_line(str(new_y))
+        #serial.write_line(str(new_x)) #Only for debugging pusrposes
+        #serial.write_line(str(new_y))
+        #serial.write_line(str(maze.mazeMap[new_x][new_y]))
         if (new_x < 0 or new_x > maze.size):
             pass
         elif (new_y < 0 or new_y > maze.size):
             pass
         elif (maze.mazeMap[new_y][new_x] == 0):
-            maze.mazeMap[self.y][self.x] = 0
-            maze.mazeMap[new_y][new_x] = 2 #player is number 2
+            maze.mazeMap[self.x][self.y] = 0
+            maze.mazeMap[new_x][new_y] = 2 #player is number 2
             self.x = new_x
             self.y = new_y
 
@@ -105,11 +106,12 @@ class Maze: #Class for maze handling
     def __init__(self):
         self.size = 10
         self.microbitsLEDS = 5
+        self.segments = 4
         self.mazeMap = [[0,0,0,0,0], #Upper left
                         [0,0,0,0,0],
-                        [0,0,1,0,0],
-                        [0,1,3,1,0],
-                        [0,0,1,0,0],
+                        [0,0,0,0,0],
+                        [0,0,0,0,0],
+                        [0,0,0,0,0],
                         
                         [0,0,0,0,0], #Upper right
                         [0,0,0,0,0],
@@ -130,23 +132,28 @@ class Maze: #Class for maze handling
                         [0,0,0,0,0]]
     
     def resetMap(self):
-        self.mazeMap = DEFAULT_MAZE_MAP
+        self.mazeMap = []
+        for row in DEFAULT_MAZE_MAP:
+            new_row = []
+            for val in row:
+                new_row.append(val)
+            self.mazeMap.append(new_row)
     
     def displayMap(self):
-        for i in range(self.microbitsLEDS):
+        for i in range(self.segments * self.microbitsLEDS):
             row = ""
             for j in range(self.microbitsLEDS):
-                row += str(self.mazeMap[j][i])
-            #basic.show_string(row) #Only for debbuging purposes
-
+                val = self.mazeMap[i][j]
+                row += str(val)
+            #serial.write_line(row)
             if i <= 4:
                 comunicator.broadcastMessage(4, row + " " + str(i))
             elif i > 4 and i < 10:
-                comunicator.broadcastMessage(5, row + " " + str(i))
+                comunicator.broadcastMessage(5, row + " " + str(i - 5))
             elif i > 9 and i < 15:
-                comunicator.broadcastMessage(6, row + " " + str(i))
+                comunicator.broadcastMessage(6, row + " " + str(i - 10))
             else:
-                comunicator.broadcastMessage(7, row + " " + str(i))
+                comunicator.broadcastMessage(7, row + " " + str(i - 15))
 
 class Comunicator: #Handle comunication between Microbits
     def __init__(self):
@@ -173,8 +180,8 @@ game_loop = True
 
 def setup():
     maze.resetMap()
-    player.x = 7
-    player.y = 7
+    player.x = 2
+    player.y = 2
     player.move(0,0)
     maze.displayMap()
     last_time = control.millis()
