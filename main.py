@@ -1,5 +1,29 @@
 joystickbit.init_joystick_bit() #Initialize joystickbit
 
+DEFAULT_MAZE_MAP = [[1,1,1,1,1], #Upper left
+                    [1,1,1,1,1],
+                    [1,1,0,0,0],
+                    [1,1,0,0,0],
+                    [1,1,0,0,0],
+                    
+                    [1,1,1,1,1], #Upper right
+                    [1,1,1,1,1],
+                    [0,0,0,1,1],
+                    [0,0,0,1,1],
+                    [0,0,0,1,1],
+                    
+                    [1,1,0,0,0], #Lower left
+                    [1,1,0,0,0],
+                    [1,1,0,0,0],
+                    [1,1,1,1,1],
+                    [1,1,1,1,1],
+                    
+                    [0,0,0,1,1], #Lower right
+                    [0,0,0,1,1],
+                    [0,0,0,1,1],
+                    [1,1,1,1,1],
+                    [1,1,1,1,1]]
+
 # class Buttons:
 #     def __init__(self):
 #         self.repeatInterval = 500
@@ -106,10 +130,7 @@ class Maze: #Class for maze handling
                         [0,0,0,0,0]]
     
     def resetMap(self):
-        for i in range(self.microbitsLEDS):
-            for j in range(self.microbitsLEDS):
-                if self.mazeMap[j][i] != 0:
-                    self.mazeMap[j][i] = 0
+        self.mazeMap = DEFAULT_MAZE_MAP
     
     def displayMap(self):
         for i in range(self.microbitsLEDS):
@@ -151,7 +172,9 @@ y_timer = Timer()
 game_loop = True
 
 def setup():
-    #maze.resetMap()
+    maze.resetMap()
+    player.x = 7
+    player.y = 7
     player.move(0,0)
     maze.displayMap()
     last_time = control.millis()
@@ -178,3 +201,6 @@ while game_loop:
     elif (joystickbit.get_rocker_value(joystickbit.rockerType.Y) > 570 and y_timer.timeElapsed(delta)):
         player.move(0, -1)
         maze.displayMap()
+    
+    if (input.button_is_pressed(Button.A)):
+        setup()

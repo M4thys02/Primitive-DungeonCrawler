@@ -2,6 +2,11 @@ let now: number;
 let delta: number;
 joystickbit.initJoystickBit()
 // Initialize joystickbit
+let DEFAULT_MAZE_MAP = [[1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 0, 0, 0], [1, 1, 0, 0, 0], [1, 1, 0, 0, 0], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [0, 0, 0, 1, 1], [0, 0, 0, 1, 1], [0, 0, 0, 1, 1], [1, 1, 0, 0, 0], [1, 1, 0, 0, 0], [1, 1, 0, 0, 0], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [0, 0, 0, 1, 1], [0, 0, 0, 1, 1], [0, 0, 0, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1]]
+// Upper left
+// Upper right
+// Lower left
+// Lower right
 //  class Buttons:
 //      def __init__(self):
 //          self.repeatInterval = 500
@@ -122,14 +127,7 @@ class Maze {
     // Lower left
     // Lower right
     public resetMap() {
-        for (let i = 0; i < this.microbitsLEDS; i++) {
-            for (let j = 0; j < this.microbitsLEDS; j++) {
-                if (this.mazeMap[j][i] != 0) {
-                    this.mazeMap[j][i] = 0
-                }
-                
-            }
-        }
+        this.mazeMap = DEFAULT_MAZE_MAP
     }
     
     public displayMap() {
@@ -184,7 +182,9 @@ let x_timer = new Timer()
 let y_timer = new Timer()
 let game_loop = true
 function setup() {
-    // maze.resetMap()
+    maze.resetMap()
+    player.x = 7
+    player.y = 7
     player.move(0, 0)
     maze.displayMap()
     let last_time = control.millis()
@@ -211,6 +211,10 @@ while (game_loop) {
     } else if (joystickbit.getRockerValue(joystickbit.rockerType.Y) > 570 && y_timer.timeElapsed(delta)) {
         player.move(0, -1)
         maze.displayMap()
+    }
+    
+    if (input.buttonIsPressed(Button.A)) {
+        setup()
     }
     
 }
