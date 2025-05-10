@@ -2,11 +2,9 @@ let now: number;
 let delta: number;
 joystickbit.initJoystickBit()
 // Initialize joystickbit
-let DEFAULT_MAZE_MAP = [[1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 0, 0, 0], [1, 1, 0, 0, 0], [1, 1, 0, 0, 0], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [0, 0, 0, 1, 1], [0, 0, 0, 1, 1], [0, 0, 0, 1, 1], [1, 1, 0, 0, 0], [1, 1, 0, 0, 0], [1, 1, 0, 0, 0], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [0, 0, 0, 1, 1], [0, 0, 0, 1, 1], [0, 0, 0, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1]]
-// Upper left
-// Upper right
-// Lower left
-// Lower right
+let DEFAULT_MAZE_MAP = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 0, 0, 0, 0, 0, 0, 1, 1], [1, 1, 0, 0, 0, 0, 0, 0, 1, 1], [1, 1, 0, 0, 0, 0, 0, 0, 1, 1], [1, 1, 0, 0, 0, 0, 0, 0, 1, 1], [1, 1, 0, 0, 0, 0, 0, 0, 1, 1], [1, 1, 0, 0, 0, 0, 0, 0, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
+//  Upper half
+// Lower half
 //  class Buttons:
 //      def __init__(self):
 //          self.repeatInterval = 500
@@ -122,13 +120,11 @@ class Maze {
         this.size = 10
         this.microbitsLEDS = 5
         this.segments = 4
-        this.mazeMap = [[0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]]
+        this.mazeMap = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
     }
     
-    // Upper left
-    // Upper right
-    // Lower left
-    // Lower right
+    //  Upper half
+    // Lower half
     public resetMap() {
         let new_row: any[];
         this.mazeMap = []
@@ -142,25 +138,35 @@ class Maze {
     }
     
     public displayMap() {
-        let row: string;
+        let rowA: string;
+        let rowB: string;
         let val: number;
-        for (let i = 0; i < this.segments * this.microbitsLEDS; i++) {
-            row = ""
-            for (let j = 0; j < this.microbitsLEDS; j++) {
+        for (let i = 0; i < this.size; i++) {
+            rowA = ""
+            rowB = ""
+            for (let j = 0; j < this.size; j++) {
                 val = this.mazeMap[i][j]
-                row += "" + val
+                if (j > 4) {
+                    if (i < this.size / 2) {
+                        comunicator.broadcastMessage(4, rowA + " " + ("" + i))
+                    } else {
+                        comunicator.broadcastMessage(6, rowA + " " + ("" + (i - 5)))
+                    }
+                    
+                    rowB += "" + val
+                } else {
+                    rowA += "" + val
+                }
+                
             }
-            // serial.write_line(row)
-            if (i <= 4) {
-                comunicator.broadcastMessage(4, row + " " + ("" + i))
-            } else if (i > 4 && i < 10) {
-                comunicator.broadcastMessage(5, row + " " + ("" + (i - 5)))
-            } else if (i > 9 && i < 15) {
-                comunicator.broadcastMessage(6, row + " " + ("" + (i - 10)))
+            if (i < this.size / 2) {
+                comunicator.broadcastMessage(5, rowB + " " + ("" + i))
             } else {
-                comunicator.broadcastMessage(7, row + " " + ("" + (i - 15)))
+                comunicator.broadcastMessage(7, rowB + " " + ("" + (i - 5)))
             }
             
+            serial.writeLine(rowA)
+            serial.writeLine(rowB)
         }
     }
     

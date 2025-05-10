@@ -1,28 +1,16 @@
 joystickbit.init_joystick_bit() #Initialize joystickbit
 
-DEFAULT_MAZE_MAP = [[1,1,1,1,1], #Upper left
-                    [1,1,1,1,1],
-                    [1,1,0,0,0],
-                    [1,1,0,0,0],
-                    [1,1,0,0,0],
+DEFAULT_MAZE_MAP = [[1,1,1,1,1, 1,1,1,1,1], # Upper half
+                    [1,1,1,1,1, 1,1,1,1,1],
+                    [1,1,0,0,0, 0,0,0,1,1],
+                    [1,1,0,0,0, 0,0,0,1,1],
+                    [1,1,0,0,0, 0,0,0,1,1],
                     
-                    [1,1,1,1,1], #Upper right
-                    [1,1,1,1,1],
-                    [0,0,0,1,1],
-                    [0,0,0,1,1],
-                    [0,0,0,1,1],
-                    
-                    [1,1,0,0,0], #Lower left
-                    [1,1,0,0,0],
-                    [1,1,0,0,0],
-                    [1,1,1,1,1],
-                    [1,1,1,1,1],
-                    
-                    [0,0,0,1,1], #Lower right
-                    [0,0,0,1,1],
-                    [0,0,0,1,1],
-                    [1,1,1,1,1],
-                    [1,1,1,1,1]]
+                    [1,1,0,0,0, 0,0,0,1,1], #Lower half
+                    [1,1,0,0,0, 0,0,0,1,1],
+                    [1,1,0,0,0, 0,0,0,1,1],
+                    [1,1,1,1,1, 1,1,1,1,1],
+                    [1,1,1,1,1, 1,1,1,1,1]]
 
 # class Buttons:
 #     def __init__(self):
@@ -107,29 +95,17 @@ class Maze: #Class for maze handling
         self.size = 10
         self.microbitsLEDS = 5
         self.segments = 4
-        self.mazeMap = [[0,0,0,0,0], #Upper left
-                        [0,0,0,0,0],
-                        [0,0,0,0,0],
-                        [0,0,0,0,0],
-                        [0,0,0,0,0],
+        self.mazeMap = [[0,0,0,0,0, 0,0,0,0,0], # Upper half
+                        [0,0,0,0,0, 0,0,0,0,0],
+                        [0,0,0,0,0, 0,0,0,0,0],
+                        [0,0,0,0,0, 0,0,0,0,0],
+                        [0,0,0,0,0, 0,0,0,0,0],
                         
-                        [0,0,0,0,0], #Upper right
-                        [0,0,0,0,0],
-                        [0,0,0,0,0],
-                        [0,0,0,0,0],
-                        [0,0,0,0,0],
-                        
-                        [0,0,0,0,0], #Lower left
-                        [0,0,0,0,0],
-                        [0,0,0,0,0],
-                        [0,0,0,0,0],
-                        [0,0,0,0,0],
-                        
-                        [0,0,0,0,0], #Lower right
-                        [0,0,0,0,0],
-                        [0,0,0,0,0],
-                        [0,0,0,0,0],
-                        [0,0,0,0,0]]
+                        [0,0,0,0,0, 0,0,0,0,0], #Lower half
+                        [0,0,0,0,0, 0,0,0,0,0],
+                        [0,0,0,0,0, 0,0,0,0,0],
+                        [0,0,0,0,0, 0,0,0,0,0],
+                        [0,0,0,0,0, 0,0,0,0,0]]
     
     def resetMap(self):
         self.mazeMap = []
@@ -140,20 +116,26 @@ class Maze: #Class for maze handling
             self.mazeMap.append(new_row)
     
     def displayMap(self):
-        for i in range(self.segments * self.microbitsLEDS):
-            row = ""
-            for j in range(self.microbitsLEDS):
+        for i in range(self.size):
+            rowA = ""
+            rowB = ""
+            for j in range(self.size):
                 val = self.mazeMap[i][j]
-                row += str(val)
-            #serial.write_line(row)
-            if i <= 4:
-                comunicator.broadcastMessage(4, row + " " + str(i))
-            elif i > 4 and i < 10:
-                comunicator.broadcastMessage(5, row + " " + str(i - 5))
-            elif i > 9 and i < 15:
-                comunicator.broadcastMessage(6, row + " " + str(i - 10))
+                if (j > 4):
+                    if (i < self.size / 2):
+                        comunicator.broadcastMessage(4, rowA + " " + str(i))
+                    else:
+                        comunicator.broadcastMessage(6, rowA + " " + str(i - 5))
+                    rowB += str(val)
+                else:
+                    rowA += str(val)
+            if (i < self.size / 2):
+                comunicator.broadcastMessage(5, rowB + " " + str(i))
             else:
-                comunicator.broadcastMessage(7, row + " " + str(i - 15))
+                comunicator.broadcastMessage(7, rowB + " " + str(i - 5))
+            
+            serial.write_line(rowA)
+            serial.write_line(rowB)
 
 class Comunicator: #Handle comunication between Microbits
     def __init__(self):
