@@ -58,12 +58,14 @@ class Player {
         this.y = 0
     }
     
-    public update_hp(change: any) {
+    public update_hp(change: number) {
         this.hp += change
+        comunicator.broadcastNumber(2, change)
     }
     
-    public update_stamina(change: any) {
+    public update_stamina(change: number) {
         this.stamina += change
+        comunicator.broadcastNumber(3, change)
     }
     
     public show_inv_image() {
@@ -163,6 +165,11 @@ class Comunicator {
     public broadcastMessage(new_group: number, message: string) {
         radio.setGroup(new_group)
         radio.sendString(message)
+    }
+    
+    public broadcastNumber(new_group: number, num: number) {
+        radio.setGroup(new_group)
+        radio.sendNumber(num)
     }
     
 }

@@ -46,9 +46,11 @@ class Player: #Everything connected to player
     
     def update_hp(self, change):
         self.hp += change
+        comunicator.broadcastNumber(2, change)
 
     def update_stamina(self, change):
         self.stamina += change
+        comunicator.broadcastNumber(3, change)
     
     def show_inv_image(self):
         self.inventory[0].show_image(0)
@@ -132,6 +134,10 @@ class Comunicator: #Handle comunication between Microbits
     def broadcastMessage(self, new_group, message):
         radio.set_group(new_group)
         radio.send_string(message)
+    
+    def broadcastNumber(self, new_group, num):
+        radio.set_group(new_group)
+        radio.send_number(num)
 
 player = Player()
 comunicator = Comunicator()
