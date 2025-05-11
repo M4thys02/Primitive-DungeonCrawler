@@ -85,7 +85,6 @@ class Player {
         // player is number 2
         this.x = 7
         this.y = 9
-        this.move(0, 0)
     }
     
     public move(dx: number, dy: number) {
@@ -95,10 +94,8 @@ class Player {
         //  serial.write_line(str(new_y))
         //  serial.write_line(str(maze.mazeMap[new_x][new_y]))
         if (new_x < 0 || new_x > maze.size - 1) {
-            this.reset_position()
             maze.new_level()
         } else if (new_y < 0 || new_y > maze.size - 1) {
-            this.reset_position()
             maze.new_level()
         } else if (maze.mazeMap[new_y][new_x] == 0) {
             maze.mazeMap[this.y][this.x] = 0
@@ -216,6 +213,7 @@ class Maze {
     
     public new_level() {
         this.resetMap()
+        player.reset_position()
         this.select_exits()
         this.displayMap()
     }
@@ -251,9 +249,8 @@ let x_timer = new Timer()
 let y_timer = new Timer()
 let game_loop = true
 function setup() {
-    player.reset_position()
-    player.show_inv_image()
     maze.new_level()
+    player.show_inv_image()
     let last_time = control.millis()
     return
 }

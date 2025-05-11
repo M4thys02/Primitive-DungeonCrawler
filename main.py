@@ -74,7 +74,6 @@ class Player: #Everything connected to player
         maze.mazeMap[default_y][default_x] = 2 #player is number 2
         self.x = 7
         self.y = 9
-        self.move(0,0)
 
     def move(self, dx, dy):
         new_x = self.x + dx
@@ -83,10 +82,8 @@ class Player: #Everything connected to player
         # serial.write_line(str(new_y))
         # serial.write_line(str(maze.mazeMap[new_x][new_y]))
         if (new_x < 0 or new_x > (maze.size - 1)):
-            self.reset_position()
             maze.new_level()
         elif (new_y < 0 or new_y > (maze.size - 1)):
-            self.reset_position()
             maze.new_level()
         elif (maze.mazeMap[new_y][new_x] == 0):
             maze.mazeMap[self.y][self.x] = 0
@@ -168,6 +165,7 @@ class Maze: #Class for maze handling
     
     def new_level(self):
         self.resetMap()
+        player.reset_position()
         self.select_exits()
         self.displayMap()
 
@@ -195,11 +193,8 @@ y_timer = Timer()
 game_loop = True
 
 def setup():
-    player.reset_position()
-    player.show_inv_image()
-
     maze.new_level()
-
+    player.show_inv_image()
     last_time = control.millis()
     return
 
