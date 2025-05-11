@@ -2,9 +2,14 @@ let now: number;
 let delta: number;
 joystickbit.initJoystickBit()
 // Initialize joystickbit
-let DEFAULT_MAZE_MAP = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 0, 0, 0, 0, 0, 0, 1, 1], [1, 1, 0, 0, 0, 0, 0, 0, 1, 1], [1, 1, 0, 0, 0, 0, 0, 0, 1, 1], [1, 1, 0, 0, 0, 0, 0, 0, 1, 1], [1, 1, 0, 0, 0, 0, 0, 0, 1, 1], [1, 1, 0, 0, 0, 0, 0, 0, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
+let DEFAULT_MAZE_MAP = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 1, 1, 1, 1, 1, 0, 0, 0, 1]]
 //  Upper half
-// Lower half
+//  Upper => U
+//  Lower half
+//  Lower => L
+let EXITS_COORDINATES = [[2, 0], [7, 0], [2, 9], [7, 9], [0, 2], [0, 7]]
+// Middle coor of exit
+//  In order: UL, LL, UR, LR, up left, up right
 //  class Buttons:
 //      def __init__(self):
 //          self.repeatInterval = 500
@@ -81,9 +86,9 @@ class Player {
         //  serial.write_line(str(new_x)) #Only for debugging pusrposes
         //  serial.write_line(str(new_y))
         //  serial.write_line(str(maze.mazeMap[new_x][new_y]))
-        if (new_x < 0 || new_x > maze.size) {
+        if (new_x < 0 || new_x > maze.size - 1) {
             
-        } else if (new_y < 0 || new_y > maze.size) {
+        } else if (new_y < 0 || new_y > maze.size - 1) {
             
         } else if (maze.mazeMap[new_y][new_x] == 0) {
             maze.mazeMap[this.y][this.x] = 0
@@ -206,8 +211,8 @@ let y_timer = new Timer()
 let game_loop = true
 function setup() {
     maze.resetMap()
-    player.x = 2
-    player.y = 2
+    player.x = 7
+    player.y = 9
     player.move(0, 0)
     maze.displayMap()
     let last_time = control.millis()

@@ -1,17 +1,19 @@
 joystickbit.init_joystick_bit() #Initialize joystickbit
 
 DEFAULT_MAZE_MAP = [[1,1,1,1,1, 1,1,1,1,1], # Upper half
-                    [1,1,1,1,1, 1,1,1,1,1],
-                    [1,1,0,0,0, 0,0,0,1,1],
-                    [1,1,0,0,0, 0,0,0,1,1],
-                    [1,1,0,0,0, 0,0,0,1,1],
+                    [1,0,0,0,0, 0,0,0,0,1], # Upper => U
+                    [1,0,0,0,0, 0,0,0,0,1],
+                    [1,0,0,0,0, 0,0,0,0,1],
+                    [1,0,0,0,0, 0,0,0,0,1],
                     
-                    [1,1,0,0,0, 0,0,0,1,1], #Lower half
-                    [1,1,0,0,0, 0,0,0,1,1],
-                    [1,1,0,0,0, 0,0,0,1,1],
-                    [1,1,1,1,1, 1,1,1,1,1],
-                    [1,1,1,1,1, 1,1,1,1,1]]
+                    [1,0,0,0,0, 0,0,0,0,1], # Lower half
+                    [1,0,0,0,0, 0,0,0,0,1], # Lower => L
+                    [1,0,0,0,0, 0,0,0,0,1],
+                    [1,0,0,0,0, 0,0,0,0,1],
+                    [1,1,1,1,1, 1,0,0,0,1]]
 
+EXITS_COORDINATES = [[2,0],[7,0],[2,9],[7,9],[0,2],[0,7]] #Middle coor of exit
+                                                            # In order: UL, LL, UR, LR, up left, up right
 # class Buttons:
 #     def __init__(self):
 #         self.repeatInterval = 500
@@ -74,9 +76,9 @@ class Player: #Everything connected to player
         # serial.write_line(str(new_x)) #Only for debugging pusrposes
         # serial.write_line(str(new_y))
         # serial.write_line(str(maze.mazeMap[new_x][new_y]))
-        if (new_x < 0 or new_x > maze.size):
+        if (new_x < 0 or new_x > (maze.size - 1)):
             pass
-        elif (new_y < 0 or new_y > maze.size):
+        elif (new_y < 0 or new_y > (maze.size - 1)):
             pass
         elif (maze.mazeMap[new_y][new_x] == 0):
             maze.mazeMap[self.y][self.x] = 0
@@ -164,8 +166,8 @@ game_loop = True
 
 def setup():
     maze.resetMap()
-    player.x = 2
-    player.y = 2
+    player.x = 7
+    player.y = 9
     player.move(0,0)
     maze.displayMap()
     last_time = control.millis()
