@@ -45,29 +45,53 @@ class Timer:
 class Player: #Everything connected to player
     def __init__(self):
         self.hp = 3
-        self.stamina = 4
-        self.inventory = [images.create_image("""
-            . . . # #
-            . . # # .
-            . . # . .
-            # # # . .
-            . # . . .
-            """)]
+        self.hitpoints_pictures = [images.create_image("""
+                                    . # . . .
+                                    # . # . .
+                                    # . . . .
+                                    . # . . .
+                                    . . # . .
+                                    """),
+                                images.create_image("""
+                                    . # . . .
+                                    # # # . .
+                                    # # # . .
+                                    . # # . .
+                                    . . # . .
+                                    """),
+                                images.create_image("""
+                                    . # . # .
+                                    # . # . #
+                                    # . . . #
+                                    . # . # .
+                                    . . # . .
+                                    """),
+                                images.create_image("""
+                                    . # . # .
+                                    # # # # #
+                                    # # # # #
+                                    . # # # .
+                                    . . # . .
+                                    """)]
         self.x = 0
         self.y = 0
     
     def update_hp(self, change):
-        self.hp += change
-        comunicator.broadcastNumber(2, change)
+        if (self.hp + change > (len(self.hitpoints_pictures) - 1)):
+            pass
+        elif (self.hp + change < 0):
+            pass
+        else:
+            self.hp += change
 
-    def update_stamina(self, change):
-        self.stamina += change
-        comunicator.broadcastNumber(3, change)
+        self.show_hp()
     
-    def show_inv_image(self):
-        self.inventory[0].show_image(0)
+    def show_hp(self):
+        self.hitpoints_pictures[self.hp].show_image(0)
 
-    def reset_position(self):
+    def reset_player(self):
+        self.hp = 3
+        self.show_hp()
         default_x = 7
         default_y = 9
         maze.mazeMap[self.y][self.x] = 0
@@ -167,7 +191,7 @@ class Maze: #Class for maze handling
     
     def new_level(self):
         self.resetMap()
-        player.reset_position()
+        player.reset_player()
         self.select_exits()
         self.displayMap()
 
@@ -196,7 +220,7 @@ game_loop = True
 
 def setup():
     maze.new_level()
-    player.show_inv_image()
+    player.show_hp()
     last_time = control.millis()
     return
 

@@ -44,40 +44,60 @@ class Timer {
 
 class Player {
     hp: number
-    stamina: number
-    inventory: Image[]
+    hitpoints_pictures: Image[]
     x: number
     y: number
     // Everything connected to player
     constructor() {
         this.hp = 3
-        this.stamina = 4
-        this.inventory = [images.createImage(`
-            . . . # #
-            . . # # .
-            . . # . .
-            # # # . .
-            . # . . .
-            `)]
+        this.hitpoints_pictures = [images.createImage(`
+                                    . # . . .
+                                    # . # . .
+                                    # . . . .
+                                    . # . . .
+                                    . . # . .
+                                    `), images.createImage(`
+                                    . # . . .
+                                    # # # . .
+                                    # # # . .
+                                    . # # . .
+                                    . . # . .
+                                    `), images.createImage(`
+                                    . # . # .
+                                    # . # . #
+                                    # . . . #
+                                    . # . # .
+                                    . . # . .
+                                    `), images.createImage(`
+                                    . # . # .
+                                    # # # # #
+                                    # # # # #
+                                    . # # # .
+                                    . . # . .
+                                    `)]
         this.x = 0
         this.y = 0
     }
     
-    public update_hp(change: number) {
-        this.hp += change
-        comunicator.broadcastNumber(2, change)
+    public update_hp(change: any) {
+        if (this.hp + change > this.hitpoints_pictures.length - 1) {
+            
+        } else if (this.hp + change < 0) {
+            
+        } else {
+            this.hp += change
+        }
+        
+        this.show_hp()
     }
     
-    public update_stamina(change: number) {
-        this.stamina += change
-        comunicator.broadcastNumber(3, change)
+    public show_hp() {
+        this.hitpoints_pictures[this.hp].showImage(0)
     }
     
-    public show_inv_image() {
-        this.inventory[0].showImage(0)
-    }
-    
-    public reset_position() {
+    public reset_player() {
+        this.hp = 3
+        this.show_hp()
         let default_x = 7
         let default_y = 9
         maze.mazeMap[this.y][this.x] = 0
@@ -215,7 +235,7 @@ class Maze {
     
     public new_level() {
         this.resetMap()
-        player.reset_position()
+        player.reset_player()
         this.select_exits()
         this.displayMap()
     }
@@ -252,7 +272,7 @@ let y_timer = new Timer()
 let game_loop = true
 function setup() {
     maze.new_level()
-    player.show_inv_image()
+    player.show_hp()
     let last_time = control.millis()
     return
 }
