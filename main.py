@@ -12,8 +12,6 @@ DEFAULT_MAZE_MAP = [[1,1,1,1,1, 1,1,1,1,1], # Upper half
                     [1,0,0,0,0, 0,0,0,0,1],
                     [1,1,1,1,1, 1,0,0,0,1]]
 
-EXITS_COORDINATES = [[2,0],[7,0],[2,9],[7,9],[0,2],[0,7]] #Middle coor of exit
-                                                            # In order: UL, LL, UR, LR, up left, up right
 # class Buttons:
 #     def __init__(self):
 #         self.repeatInterval = 500
@@ -68,7 +66,15 @@ class Player: #Everything connected to player
     
     def show_inv_image(self):
         self.inventory[0].show_image(0)
-        
+
+    def reset_position(self):
+        default_x = 7
+        default_y = 9
+        maze.mazeMap[self.y][self.x] = 0
+        maze.mazeMap[default_y][default_x] = 2 #player is number 2
+        self.x = 7
+        self.y = 9
+        self.move(0,0)
 
     def move(self, dx, dy):
         new_x = self.x + dx
@@ -77,9 +83,11 @@ class Player: #Everything connected to player
         # serial.write_line(str(new_y))
         # serial.write_line(str(maze.mazeMap[new_x][new_y]))
         if (new_x < 0 or new_x > (maze.size - 1)):
-            pass
+            self.reset_position()
+            maze.new_level()
         elif (new_y < 0 or new_y > (maze.size - 1)):
-            pass
+            self.reset_position()
+            maze.new_level()
         elif (maze.mazeMap[new_y][new_x] == 0):
             maze.mazeMap[self.y][self.x] = 0
             maze.mazeMap[new_y][new_x] = 2 #player is number 2
@@ -97,6 +105,8 @@ class Maze: #Class for maze handling
         self.size = 10
         self.microbitsLEDS = 5
         self.segments = 4
+        self.exits_coordinates = [[2,0],[7,0],[2,9],[7,9],[0,2],[0,7]] # Middle coor of exit in order: UL, LL, UR, LR, up left, up right
+        self.num_exits = 6
         self.mazeMap = [[0,0,0,0,0, 0,0,0,0,0], # Upper half
                         [0,0,0,0,0, 0,0,0,0,0],
                         [0,0,0,0,0, 0,0,0,0,0],
@@ -141,6 +151,26 @@ class Maze: #Class for maze handling
                 comunicator.broadcastMessage(6, rowA + " " + str(i - 5))  # Lower left
                 comunicator.broadcastMessage(7, rowB + " " + str(i - 5))  # Lower right
 
+    def select_exits(self):
+        candidates = self.exits_coordinates[:]
+        selected = []
+        used_indexes = []
+
+        for i in range(self.num_exits):
+            index = randint(0, self.num_exits - 1)
+            selected.append(candidates[index])
+            if index not in used_indexes:
+                used_indexes.append(index)
+                selected.append(self.exits_coordinates[index])
+        
+        for i in range(len(selected)):
+            self.mazeMap[selected[i][0]][selected[i][1]] = 0
+    
+    def new_level(self):
+        self.resetMap()
+        self.select_exits()
+        self.displayMap()
+
 class Comunicator: #Handle comunication between Microbits
     def __init__(self):
         self.defaultRadioGroup = 1
@@ -165,14 +195,12 @@ y_timer = Timer()
 game_loop = True
 
 def setup():
-    maze.resetMap()
-    player.x = 7
-    player.y = 9
-    player.move(0,0)
-    maze.displayMap()
-    last_time = control.millis()
-
+    player.reset_position()
     player.show_inv_image()
+
+    maze.new_level()
+
+    last_time = control.millis()
     return
 
 setup()

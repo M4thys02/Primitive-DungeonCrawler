@@ -7,9 +7,6 @@ let DEFAULT_MAZE_MAP = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 0, 0, 0, 0, 0, 0, 0,
 //  Upper => U
 //  Lower half
 //  Lower => L
-let EXITS_COORDINATES = [[2, 0], [7, 0], [2, 9], [7, 9], [0, 2], [0, 7]]
-// Middle coor of exit
-//  In order: UL, LL, UR, LR, up left, up right
 //  class Buttons:
 //      def __init__(self):
 //          self.repeatInterval = 500
@@ -80,6 +77,17 @@ class Player {
         this.inventory[0].showImage(0)
     }
     
+    public reset_position() {
+        let default_x = 7
+        let default_y = 9
+        maze.mazeMap[this.y][this.x] = 0
+        maze.mazeMap[default_y][default_x] = 2
+        // player is number 2
+        this.x = 7
+        this.y = 9
+        this.move(0, 0)
+    }
+    
     public move(dx: number, dy: number) {
         let new_x = this.x + dx
         let new_y = this.y + dy
@@ -87,9 +95,11 @@ class Player {
         //  serial.write_line(str(new_y))
         //  serial.write_line(str(maze.mazeMap[new_x][new_y]))
         if (new_x < 0 || new_x > maze.size - 1) {
-            
+            this.reset_position()
+            maze.new_level()
         } else if (new_y < 0 || new_y > maze.size - 1) {
-            
+            this.reset_position()
+            maze.new_level()
         } else if (maze.mazeMap[new_y][new_x] == 0) {
             maze.mazeMap[this.y][this.x] = 0
             maze.mazeMap[new_y][new_x] = 2
@@ -119,12 +129,17 @@ class Maze {
     size: number
     microbitsLEDS: number
     segments: number
+    exits_coordinates: number[][]
+    num_exits: number
     mazeMap: number[][]
     // Class for maze handling
     constructor() {
         this.size = 10
         this.microbitsLEDS = 5
         this.segments = 4
+        this.exits_coordinates = [[2, 0], [7, 0], [2, 9], [7, 9], [0, 2], [0, 7]]
+        //  Middle coor of exit in order: UL, LL, UR, LR, up left, up right
+        this.num_exits = 6
         this.mazeMap = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
     }
     
@@ -178,9 +193,35 @@ class Maze {
         }
     }
     
+    //  Lower right
+    public select_exits() {
+        let i: number;
+        let index: number;
+        let candidates = this.exits_coordinates.slice(0)
+        let selected = []
+        let used_indexes = []
+        for (i = 0; i < this.num_exits; i++) {
+            index = randint(0, this.num_exits - 1)
+            selected.push(candidates[index])
+            if (used_indexes.indexOf(index) < 0) {
+                used_indexes.push(index)
+                selected.push(this.exits_coordinates[index])
+            }
+            
+        }
+        for (i = 0; i < selected.length; i++) {
+            this.mazeMap[selected[i][0]][selected[i][1]] = 0
+        }
+    }
+    
+    public new_level() {
+        this.resetMap()
+        this.select_exits()
+        this.displayMap()
+    }
+    
 }
 
-//  Lower right
 class Comunicator {
     defaultRadioGroup: number
     // Handle comunication between Microbits
@@ -210,13 +251,10 @@ let x_timer = new Timer()
 let y_timer = new Timer()
 let game_loop = true
 function setup() {
-    maze.resetMap()
-    player.x = 7
-    player.y = 9
-    player.move(0, 0)
-    maze.displayMap()
-    let last_time = control.millis()
+    player.reset_position()
     player.show_inv_image()
+    maze.new_level()
+    let last_time = control.millis()
     return
 }
 
