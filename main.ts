@@ -93,9 +93,11 @@ class Player {
         //  serial.write_line(str(new_x)) #Only for debugging pusrposes
         //  serial.write_line(str(new_y))
         //  serial.write_line(str(maze.mazeMap[new_x][new_y]))
-        if (new_x < 0 || new_x > maze.size - 1) {
+        if (new_y > 9) {
+            
+        } else if (new_x < 0 || new_x > maze.size - 1) {
             maze.new_level()
-        } else if (new_y < 0 || new_y > maze.size - 1) {
+        } else if (new_y < 0) {
             maze.new_level()
         } else if (maze.mazeMap[new_y][new_x] == 0) {
             maze.mazeMap[this.y][this.x] = 0

@@ -81,9 +81,11 @@ class Player: #Everything connected to player
         # serial.write_line(str(new_x)) #Only for debugging pusrposes
         # serial.write_line(str(new_y))
         # serial.write_line(str(maze.mazeMap[new_x][new_y]))
-        if (new_x < 0 or new_x > (maze.size - 1)):
+        if (new_y > 9):
+            pass
+        elif (new_x < 0 or new_x > (maze.size - 1)):
             maze.new_level()
-        elif (new_y < 0 or new_y > (maze.size - 1)):
+        elif (new_y < 0):
             maze.new_level()
         elif (maze.mazeMap[new_y][new_x] == 0):
             maze.mazeMap[self.y][self.x] = 0
