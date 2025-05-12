@@ -2,11 +2,195 @@ let now: number;
 let delta: number;
 joystickbit.initJoystickBit()
 // Initialize joystickbit
-let DEFAULT_MAZE_MAP = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0, 0, 1], [1, 1, 1, 1, 1, 1, 0, 0, 0, 1]]
-//  Upper half
-//  Upper => U
-//  Lower half
-//  Lower => L
+class MazeGenerator {
+    microbitsLEDS: number
+    segments: number
+    exits_coordinates: number[][]
+    num_exits: number
+    size: number
+    maze: any[]
+    visited: any[]
+    start_x: number
+    start_y: number
+    constructor() {
+        this.microbitsLEDS = 5
+        this.segments = 4
+        this.exits_coordinates = [[2, 0], [7, 0], [2, 9], [7, 9], [0, 2], [0, 7]]
+        //  Middle coor of exit in order: UL, LL, UR, LR, up left, up right
+        this.num_exits = 6
+        this.size = 10
+        this.maze = []
+        this.visited = []
+        this.start_x = 6
+        this.start_y = 8
+    }
+    
+    public in_bounds(x: any, y: any) {
+        return 1 <= x && x < this.size - 1 && (1 <= y && y < this.size - 1)
+    }
+    
+    public neighbors(x: number, y: number): any[] {
+        let dx: any;
+        let dy: any;
+        let nx: any;
+        let ny: any;
+        let result = []
+        let dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]]
+        for (let i = 0; i < dirs.length; i++) {
+            dx = dirs[i][0]
+            dy = dirs[i][1]
+            nx = x + dx
+            ny = y + dy
+            if (this.in_bounds(nx, ny)) {
+                result.push([nx, ny])
+            }
+            
+        }
+        return result
+    }
+    
+    public dfs(x: number, y: number) {
+        let j: number;
+        let tmp: any;
+        let nx: number;
+        let ny: number;
+        let count: number;
+        let neighbors2: any[];
+        let nx2: number;
+        let ny2: number;
+        this.visited[y][x] = 1
+        this.maze[y][x] = 0
+        //  free position
+        let dirs = []
+        for (let n of this.neighbors(x, y)) {
+            dirs.push(n)
+        }
+        let i = dirs.length - 1
+        // Shuffle algorithm
+        while (i > 0) {
+            j = randint(0, i)
+            tmp = dirs[i]
+            dirs[i] = dirs[j]
+            dirs[j] = tmp
+            i -= 1
+        }
+        for (i = 0; i < dirs.length; i++) {
+            nx = dirs[i][0]
+            ny = dirs[i][1]
+            if (!this.visited[ny][nx]) {
+                //  Carve path only if it leads to unvisited area
+                count = 0
+                neighbors2 = this.neighbors(nx, ny)
+                for (j = 0; j < neighbors2.length; j++) {
+                    nx2 = parseInt(neighbors2[j][0])
+                    ny2 = parseInt(neighbors2[j][1])
+                    if (this.visited[ny2][nx2]) {
+                        count += 1
+                    }
+                    
+                }
+                if (count <= 1) {
+                    this.dfs(nx, ny)
+                }
+                
+            }
+            
+        }
+    }
+    
+    public generate_connected_maze() {
+        let y: number;
+        let row: any[];
+        let x: number;
+        //  Fill maze with wall
+        this.maze = []
+        for (y = 0; y < this.size; y++) {
+            row = []
+            for (x = 0; x < this.size; x++) {
+                row.push(1)
+            }
+            this.maze.push(row)
+        }
+        this.visited = []
+        for (y = 0; y < this.size; y++) {
+            row = []
+            for (x = 0; x < this.size; x++) {
+                row.push(0)
+            }
+            this.visited.push(row)
+        }
+        this.dfs(this.start_x, this.start_y)
+    }
+    
+    public select_exits() {
+        let i: number;
+        let index: number;
+        let candidates = this.exits_coordinates.slice(0)
+        let selected = []
+        let used_indexes = []
+        for (i = 0; i < this.num_exits; i++) {
+            index = randint(0, this.num_exits - 1)
+            selected.push(candidates[index])
+            if (used_indexes.indexOf(index) < 0) {
+                used_indexes.push(index)
+                selected.push(this.exits_coordinates[index])
+            }
+            
+        }
+        for (i = 0; i < selected.length; i++) {
+            this.maze[selected[i][0]][selected[i][1]] = 0
+        }
+    }
+    
+    public displayMap() {
+        let rowA: string;
+        let rowB: string;
+        let val: any;
+        for (let i = 0; i < this.size; i++) {
+            rowA = ""
+            rowB = ""
+            for (let j = 0; j < this.size; j++) {
+                val = this.maze[i][j]
+                if (j < 5) {
+                    rowA += "" + val
+                } else {
+                    rowB += "" + val
+                }
+                
+            }
+            if (i < this.size / 2) {
+                //  Upper half
+                //  serial.write_line("Upper - rowA:" + rowA)
+                //  serial.write_line("Upper - rowB:" + rowB)
+                comunicator.broadcastMessage(4, rowA + " " + ("" + i))
+                //  Upper right
+                comunicator.broadcastMessage(5, rowB + " " + ("" + i))
+            } else {
+                //  Upper left
+                //  Lower half
+                //  serial.write_line("Lower - rowA:" + rowA)
+                //  serial.write_line("Lower - rowB:" + rowB)
+                comunicator.broadcastMessage(6, rowA + " " + ("" + (i - 5)))
+                //  Lower left
+                comunicator.broadcastMessage(7, rowB + " " + ("" + (i - 5)))
+            }
+            
+        }
+    }
+    
+    //  Lower right
+    public new_level() {
+        this.generate_connected_maze()
+        for (let i = 0; i < this.size; i++) {
+            serial.writeLine("" + this.maze[i])
+        }
+        player.reset_player()
+        this.select_exits()
+        this.displayMap()
+    }
+    
+}
+
 //  class Buttons:
 //      def __init__(self):
 //          self.repeatInterval = 500
@@ -47,6 +231,8 @@ class Player {
     hitpoints_pictures: Image[]
     x: number
     y: number
+    default_x: number
+    default_y: number
     // Everything connected to player
     constructor() {
         this.hp = 3
@@ -77,6 +263,8 @@ class Player {
                                     `)]
         this.x = 0
         this.y = 0
+        this.default_x = 7
+        this.default_y = 9
     }
     
     public update_hp(change: any) {
@@ -98,13 +286,11 @@ class Player {
     public reset_player() {
         this.hp = 3
         this.show_hp()
-        let default_x = 7
-        let default_y = 9
-        maze.mazeMap[this.y][this.x] = 0
-        maze.mazeMap[default_y][default_x] = 2
+        mazeGen.maze[this.y][this.x] = 0
+        mazeGen.maze[this.default_y][this.default_x] = 2
         // player is number 2
-        this.x = 7
-        this.y = 9
+        this.x = this.default_x
+        this.y = this.default_y
     }
     
     public move(dx: number, dy: number) {
@@ -115,13 +301,13 @@ class Player {
         //  serial.write_line(str(maze.mazeMap[new_x][new_y]))
         if (new_y > 9) {
             
-        } else if (new_x < 0 || new_x > maze.size - 1) {
-            maze.new_level()
+        } else if (new_x < 0 || new_x > mazeGen.size - 1) {
+            mazeGen.new_level()
         } else if (new_y < 0) {
-            maze.new_level()
-        } else if (maze.mazeMap[new_y][new_x] == 0) {
-            maze.mazeMap[this.y][this.x] = 0
-            maze.mazeMap[new_y][new_x] = 2
+            mazeGen.new_level()
+        } else if (mazeGen.maze[new_y][new_x] == 0) {
+            mazeGen.maze[this.y][this.x] = 0
+            mazeGen.maze[new_y][new_x] = 2
             // player is number 2
             this.x = new_x
             this.y = new_y
@@ -140,104 +326,6 @@ class Monster {
         this.name = name
         this.hp = hp
         this.attack = attack
-    }
-    
-}
-
-class Maze {
-    size: number
-    microbitsLEDS: number
-    segments: number
-    exits_coordinates: number[][]
-    num_exits: number
-    mazeMap: number[][]
-    // Class for maze handling
-    constructor() {
-        this.size = 10
-        this.microbitsLEDS = 5
-        this.segments = 4
-        this.exits_coordinates = [[2, 0], [7, 0], [2, 9], [7, 9], [0, 2], [0, 7]]
-        //  Middle coor of exit in order: UL, LL, UR, LR, up left, up right
-        this.num_exits = 6
-        this.mazeMap = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
-    }
-    
-    //  Upper half
-    // Lower half
-    public resetMap() {
-        let new_row: any[];
-        this.mazeMap = []
-        for (let row of DEFAULT_MAZE_MAP) {
-            new_row = []
-            for (let val of row) {
-                new_row.push(val)
-            }
-            this.mazeMap.push(new_row)
-        }
-    }
-    
-    public displayMap() {
-        let rowA: string;
-        let rowB: string;
-        let val: number;
-        for (let i = 0; i < this.size; i++) {
-            rowA = ""
-            rowB = ""
-            for (let j = 0; j < this.size; j++) {
-                val = this.mazeMap[i][j]
-                if (j < 5) {
-                    rowA += "" + val
-                } else {
-                    rowB += "" + val
-                }
-                
-            }
-            if (i < this.size / 2) {
-                //  Upper half
-                serial.writeLine("Upper - rowA:" + rowA)
-                serial.writeLine("Upper - rowB:" + rowB)
-                comunicator.broadcastMessage(4, rowA + " " + ("" + i))
-                //  Upper right
-                comunicator.broadcastMessage(5, rowB + " " + ("" + i))
-            } else {
-                //  Upper left
-                //  Lower half
-                serial.writeLine("Lower - rowA:" + rowA)
-                serial.writeLine("Lower - rowB:" + rowB)
-                comunicator.broadcastMessage(6, rowA + " " + ("" + (i - 5)))
-                //  Lower left
-                comunicator.broadcastMessage(7, rowB + " " + ("" + (i - 5)))
-            }
-            
-        }
-    }
-    
-    //  Lower right
-    public select_exits() {
-        let i: number;
-        let index: number;
-        let candidates = this.exits_coordinates.slice(0)
-        let selected = []
-        let used_indexes = []
-        for (i = 0; i < this.num_exits; i++) {
-            index = randint(0, this.num_exits - 1)
-            selected.push(candidates[index])
-            if (used_indexes.indexOf(index) < 0) {
-                used_indexes.push(index)
-                selected.push(this.exits_coordinates[index])
-            }
-            
-        }
-        for (i = 0; i < selected.length; i++) {
-            this.mazeMap[selected[i][0]][selected[i][1]] = 0
-        }
-    }
-    
-    public new_level() {
-        this.resetMap()
-        player.reset_player()
-        this.select_exits()
-        this.displayMap()
     }
     
 }
@@ -264,14 +352,14 @@ class Comunicator {
 let player = new Player()
 let comunicator = new Comunicator()
 let MONSTERS = [new Monster("Zombie", 3, 1), new Monster("Skeleton", 3, 2)]
-let maze = new Maze()
+let mazeGen = new MazeGenerator()
 // button = Buttons()
 let last_time = 0
 let x_timer = new Timer()
 let y_timer = new Timer()
 let game_loop = true
 function setup() {
-    maze.new_level()
+    mazeGen.new_level()
     player.show_hp()
     let last_time = control.millis()
     return
@@ -284,18 +372,18 @@ while (game_loop) {
     last_time = now
     if (joystickbit.getRockerValue(joystickbit.rockerType.X) < 450 && x_timer.timeElapsed(delta)) {
         player.move(1, 0)
-        maze.displayMap()
+        mazeGen.displayMap()
     } else if (joystickbit.getRockerValue(joystickbit.rockerType.X) > 570 && x_timer.timeElapsed(delta)) {
         player.move(-1, 0)
-        maze.displayMap()
+        mazeGen.displayMap()
     }
     
     if (joystickbit.getRockerValue(joystickbit.rockerType.Y) < 450 && y_timer.timeElapsed(delta)) {
         player.move(0, 1)
-        maze.displayMap()
+        mazeGen.displayMap()
     } else if (joystickbit.getRockerValue(joystickbit.rockerType.Y) > 570 && y_timer.timeElapsed(delta)) {
         player.move(0, -1)
-        maze.displayMap()
+        mazeGen.displayMap()
     }
     
     if (input.buttonIsPressed(Button.A)) {
