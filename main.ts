@@ -6,6 +6,7 @@ let MAZE = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 
 let VISITED = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
 let dirs = [[0, 0]]
 let neighbors2 = [[0, 0]]
+let number_of_exits = 0
 class MazeGenerator {
     microbitsLEDS: number
     segments: number
@@ -33,7 +34,7 @@ class MazeGenerator {
         return 1 <= x && x < this.size - 1 && (1 <= y && y < this.size - 1)
     }
     
-    public neighbors(x: number, y: number): any[] {
+    public neighbors(x: number, y: number): number[][] {
         let dx: any;
         let dy: any;
         let nx: any;
@@ -54,52 +55,63 @@ class MazeGenerator {
     }
     
     public dfs(x: number, y: number) {
-        let j: number;
-        let tmp: number[];
-        let nx: number;
-        let ny: number;
+        let cx: number;
+        let cy: number;
         let count: number;
+        let neighbors2: number[][];
+        let i: number;
         let nx2: number;
         let ny2: number;
-        MAZE[y][x] = 0
-        VISITED[y][x] = 1
-        _py.py_array_clear(dirs)
-        for (let n of this.neighbors(x, y)) {
-            dirs.push(n)
-        }
-        let i = dirs.length - 1
-        // Shuffle algorithm
-        while (i > 0) {
-            j = randint(0, i)
-            tmp = dirs[i]
-            dirs[i] = dirs[j]
-            dirs[j] = tmp
-            i -= 1
-        }
-        for (let d of dirs.slice(0)) {
-            nx = d[0]
-            ny = d[1]
-            if (!VISITED[ny][nx]) {
-                //  Carve path only if it leads to unvisited area
-                count = 0
-                _py.py_array_clear(neighbors2)
-                for (let m of this.neighbors(nx, ny)) {
-                    neighbors2.push(m)
-                }
-                for (j = 0; j < neighbors2.length; j++) {
-                    nx2 = neighbors2[j][0]
-                    ny2 = neighbors2[j][1]
-                    if (VISITED[ny2][nx2]) {
-                        count += 1
-                    }
-                    
-                }
-                if (count <= 1) {
-                    this.dfs(nx, ny)
+        let neighbors: number[][];
+        let j: number;
+        let nx: number;
+        let ny: number;
+        let carved_cells = 0
+        let stack = [[x, y]]
+        while (stack.length > 0) {
+            cx = stack[stack.length - 1][0]
+            cy = stack[stack.length - 1][1]
+            _py.py_array_pop(stack)
+            if (VISITED[cy][cx] == 1) {
+                continue
+            }
+            
+            //  Count visited neighbors BEFORE marking current cell
+            count = 0
+            neighbors2 = this.neighbors(cx, cy)
+            for (i = 0; i < neighbors2.length; i++) {
+                nx2 = neighbors2[i][0]
+                ny2 = neighbors2[i][1]
+                if (VISITED[ny2][nx2] == 1) {
+                    count += 1
                 }
                 
             }
+            if (carved_cells > 10 && count > 1) {
+                continue
+            }
             
+            //  Skip this cell to avoid multiple connections
+            MAZE[cy][cx] = 0
+            VISITED[cy][cx] = 1
+            carved_cells += 1
+            neighbors = this.neighbors(cx, cy)
+            //  Shuffle neighbors
+            i = neighbors.length - 1
+            while (i > 0) {
+                j = randint(0, i)
+                neighbors[i] = neighbors[j]
+                neighbors[j] = neighbors[i]
+                i -= 1
+            }
+            for (i = 0; i < neighbors.length; i++) {
+                nx = neighbors[i][0]
+                ny = neighbors[i][1]
+                if (VISITED[ny][nx] == 0) {
+                    stack.push([nx, ny])
+                }
+                
+            }
         }
     }
     
@@ -121,35 +133,57 @@ class MazeGenerator {
         MAZE[this.start_y + 1][this.start_x] = 0
     }
     
-    //  def select_exits(self):
-    //      candidates = self.exits_coordinates[:]
-    //      selected = []
-    //      used_indexes = []
-    //      for i in range(self.num_exits):
-    //          index = randint(0, self.num_exits - 1)
-    //          coord = candidates[index]
-    //          y = coord[0]
-    //          x = coord[1]
-    //          # Zkontroluj, zda alespoň jeden soused není zeď
-    //          valid = False
-    //          if y > 0 and MAZE[y - 1][x] == 0:
-    //              valid = True
-    //          if y < self.size - 1 and MAZE[y + 1][x] == 0:
-    //              valid = True
-    //          if x > 0 and MAZE[y][x - 1] == 0:
-    //              valid = True
-    //          if x < self.size - 1 and MAZE[y][x + 1] == 0:
-    //              valid = True
-    //          if valid and index not in used_indexes:
-    //              used_indexes.append(index)
-    //              selected.append([y, x])
-    //          if valid and index not in used_indexes:
-    //              used_indexes.append(index)
-    //              selected.append(coord)
-    //      for i in range(len(selected)):
-    //          y = selected[i][0]
-    //          x = selected[i][1]
-    //          MAZE[y][x] = 0
+    public select_exits() {
+        let i: number;
+        let index: number;
+        let coord: number[];
+        let y: number;
+        let x: number;
+        let valid: boolean;
+        let candidates = this.exits_coordinates.slice(0)
+        let selected = []
+        let used_indexes = []
+        for (i = 0; i < this.num_exits; i++) {
+            index = randint(0, this.num_exits - 1)
+            coord = candidates[index]
+            y = coord[0]
+            x = coord[1]
+            valid = false
+            if (y > 0 && MAZE[y - 1][x] == 0) {
+                valid = true
+            }
+            
+            if (y < this.size - 1 && MAZE[y + 1][x] == 0) {
+                valid = true
+            }
+            
+            if (x > 0 && MAZE[y][x - 1] == 0) {
+                valid = true
+            }
+            
+            if (x < this.size - 1 && MAZE[y][x + 1] == 0) {
+                valid = true
+            }
+            
+            if (valid && used_indexes.indexOf(index) < 0) {
+                used_indexes.push(index)
+                selected.push([y, x])
+            }
+            
+            if (valid && used_indexes.indexOf(index) < 0) {
+                used_indexes.push(index)
+                selected.push(coord)
+            }
+            
+        }
+        for (i = 0; i < selected.length; i++) {
+            y = selected[i][0]
+            x = selected[i][1]
+            MAZE[y][x] = 0
+        }
+        let number_of_exits = selected.length
+    }
+    
     public displayMap() {
         let rowA: string;
         let rowB: string;
@@ -189,9 +223,15 @@ class MazeGenerator {
     //  Lower right
     public new_level() {
         this.generate_connected_maze()
+        this.select_exits()
         player.reset_player()
-        //  self.select_exits()
-        console.log(MAZE[0][0])
+        //  for i in range(self.size):
+        //      row = ""
+        //      for j in range(self.size):
+        //          val = self.maze[i][j]
+        //          row += str(val)
+        //      print(row)
+        //  print("---------------------------------------------")
         this.displayMap()
     }
     
@@ -269,7 +309,7 @@ class Player {
                                     `)]
         this.x = 0
         this.y = 0
-        this.default_x = 7
+        this.default_x = 6
         this.default_y = 9
     }
     
@@ -305,8 +345,8 @@ class Player {
         //  serial.write_line(str(new_x)) #Only for debugging pusrposes
         //  serial.write_line(str(new_y))
         //  serial.write_line(str(maze.mazeMap[new_x][new_y]))
-        if (new_y > 9) {
-            
+        if (number_of_exits == 0 && new_y > 9) {
+            mazeGen.new_level()
         } else if (new_x < 0 || new_x > mazeGen.size - 1) {
             mazeGen.new_level()
         } else if (new_y < 0) {

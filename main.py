@@ -27,6 +27,8 @@ VISITED = [[0,0,0,0,0, 0,0,0,0,0],
 dirs = [[0,0]]
 neighbors2 = [[0,0]]
 
+number_of_exits = 0
+
 class MazeGenerator:
     def __init__(self):
         self.microbitsLEDS = 5
@@ -55,39 +57,49 @@ class MazeGenerator:
         return result
 
     def dfs(self, x, y):
-        MAZE[y][x] = 0
-        VISITED[y][x] = 1
+        carved_cells = 0
+        stack = [[x, y]]
 
-        dirs.clear()
-        for n in self.neighbors(x, y):
-            dirs.append(n)
+        while len(stack) > 0:
+            cx = stack[len(stack) - 1][0]
+            cy = stack[len(stack) - 1][1]
+            stack.pop()
 
-        i = len(dirs) - 1 #Shuffle algorithm
-        while i > 0:
-            j = randint(0, i)
-            tmp = dirs[i]
-            dirs[i] = dirs[j]
-            dirs[j] = tmp
-            i -= 1
+            if VISITED[cy][cx] == 1:
+                continue
 
-        for d in dirs[:]:
-            nx = d[0]
-            ny = d[1]
-            if not VISITED[ny][nx]:
-                # Carve path only if it leads to unvisited area
-                count = 0
-                neighbors2.clear()
-                for m in self.neighbors(nx, ny):
-                    neighbors2.append(m)
-                for j in range(len(neighbors2)):
-                    nx2 = neighbors2[j][0]
-                    ny2 = neighbors2[j][1]
-                    if VISITED[ny2][nx2]:
-                        count += 1
+            # Count visited neighbors BEFORE marking current cell
+            count = 0
+            neighbors2 = self.neighbors(cx, cy)
+            for i in range(len(neighbors2)):
+                nx2 = neighbors2[i][0]
+                ny2 = neighbors2[i][1]
+                if VISITED[ny2][nx2] == 1:
+                    count += 1
 
-                if count <= 1:
-                    self.dfs(nx, ny)
+            if carved_cells > 10 and count > 1:
+                continue  # Skip this cell to avoid multiple connections
 
+            MAZE[cy][cx] = 0
+            VISITED[cy][cx] = 1
+            carved_cells += 1
+
+            neighbors = self.neighbors(cx, cy)
+
+            # Shuffle neighbors
+            i = len(neighbors) - 1
+            while i > 0:
+                j = randint(0, i)
+                neighbors[i] = neighbors[j]
+                neighbors[j] = neighbors[i]
+                i -= 1
+
+            for i in range(len(neighbors)):
+                nx = neighbors[i][0]
+                ny = neighbors[i][1]
+                if VISITED[ny][nx] == 0:
+                    stack.append([nx, ny])
+    
     def generate_connected_maze(self):
         # Fill maze with wall
         
@@ -102,40 +114,41 @@ class MazeGenerator:
         self.dfs(self.start_x, self.start_y)
         MAZE[self.start_y + 1][self.start_x] = 0
 
-    # def select_exits(self):
-    #     candidates = self.exits_coordinates[:]
-    #     selected = []
-    #     used_indexes = []
+    def select_exits(self):
+        candidates = self.exits_coordinates[:]
+        selected = []
+        used_indexes = []
 
-    #     for i in range(self.num_exits):
-    #         index = randint(0, self.num_exits - 1)
-    #         coord = candidates[index]
-    #         y = coord[0]
-    #         x = coord[1]
+        for i in range(self.num_exits):
+            index = randint(0, self.num_exits - 1)
+            coord = candidates[index]
+            y = coord[0]
+            x = coord[1]
 
-    #         # Zkontroluj, zda alespoň jeden soused není zeď
-    #         valid = False
-    #         if y > 0 and MAZE[y - 1][x] == 0:
-    #             valid = True
-    #         if y < self.size - 1 and MAZE[y + 1][x] == 0:
-    #             valid = True
-    #         if x > 0 and MAZE[y][x - 1] == 0:
-    #             valid = True
-    #         if x < self.size - 1 and MAZE[y][x + 1] == 0:
-    #             valid = True
+            valid = False
+            if y > 0 and MAZE[y - 1][x] == 0:
+                valid = True
+            if y < self.size - 1 and MAZE[y + 1][x] == 0:
+                valid = True
+            if x > 0 and MAZE[y][x - 1] == 0:
+                valid = True
+            if x < self.size - 1 and MAZE[y][x + 1] == 0:
+                valid = True
 
-    #         if valid and index not in used_indexes:
-    #             used_indexes.append(index)
-    #             selected.append([y, x])
+            if valid and index not in used_indexes:
+                used_indexes.append(index)
+                selected.append([y, x])
 
-    #         if valid and index not in used_indexes:
-    #             used_indexes.append(index)
-    #             selected.append(coord)
+            if valid and index not in used_indexes:
+                used_indexes.append(index)
+                selected.append(coord)
 
-    #     for i in range(len(selected)):
-    #         y = selected[i][0]
-    #         x = selected[i][1]
-    #         MAZE[y][x] = 0
+        for i in range(len(selected)):
+            y = selected[i][0]
+            x = selected[i][1]
+            MAZE[y][x] = 0
+        
+        number_of_exits = len(selected)
     
     def displayMap(self):
         for i in range(self.size):
@@ -163,11 +176,18 @@ class MazeGenerator:
     
     def new_level(self):
         self.generate_connected_maze()
+        self.select_exits()
 
         player.reset_player()
-        # self.select_exits()
-        print(MAZE[0][0])
+        # for i in range(self.size):
+        #     row = ""
+        #     for j in range(self.size):
+        #         val = self.maze[i][j]
+        #         row += str(val)
+        #     print(row)
+        # print("---------------------------------------------")
         self.displayMap()
+
 
 # class Buttons:
 #     def __init__(self):
@@ -232,7 +252,7 @@ class Player: #Everything connected to player
                                     """)]
         self.x = 0
         self.y = 0
-        self.default_x = 7
+        self.default_x = 6
         self.default_y = 9
     
     def update_hp(self, change):
@@ -262,8 +282,8 @@ class Player: #Everything connected to player
         # serial.write_line(str(new_x)) #Only for debugging pusrposes
         # serial.write_line(str(new_y))
         # serial.write_line(str(maze.mazeMap[new_x][new_y]))
-        if (new_y > 9):
-            pass
+        if (number_of_exits == 0 and new_y > 9):
+            mazeGen.new_level()
         elif (new_x < 0 or new_x > (mazeGen.size - 1)):
             mazeGen.new_level()
         elif (new_y < 0):
