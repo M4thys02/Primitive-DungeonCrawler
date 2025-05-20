@@ -224,6 +224,7 @@ class MazeGenerator {
         this.generate_connected_maze()
         this.select_exits()
         player.reset_player()
+        monster.spawn()
         //  for i in range(self.size):
         //      row = ""
         //      for j in range(self.size):
@@ -253,16 +254,30 @@ class MazeGenerator {
 //          return False
 class Timer {
     repeatInterval: number
+    monsterInterval: number
     lastSignal: number
+    lastChange: number
     constructor() {
         this.repeatInterval = 500
+        this.monsterInterval = 1000
         this.lastSignal = 0
+        this.lastChange = 0
     }
     
     public timeElapsed(current_delta: number): boolean {
         this.lastSignal += current_delta
         if (this.lastSignal >= this.repeatInterval) {
             this.lastSignal = 0
+            return true
+        }
+        
+        return false
+    }
+    
+    public timeElapsedMonster(current_delta: number): boolean {
+        this.lastChange += current_delta
+        if (this.lastChange >= this.monsterInterval) {
+            this.lastChange = 0
             return true
         }
         
@@ -363,14 +378,60 @@ class Player {
 }
 
 class Monster {
-    name: string
-    hp: number
-    attack: number
+    x: number
+    y: number
+    directions: number[][]
+    dir: number
+    x_pos: number
+    y_pos: number
     // Class for every monster
-    constructor(name: string, hp: number, attack: number) {
-        this.name = name
-        this.hp = hp
-        this.attack = attack
+    constructor() {
+        this.x = -1
+        this.y = -1
+        this.directions = [[0, -1], [1, 0], [0, 1], [-1, 0]]
+        this.dir = 0
+    }
+    
+    public move() {
+        let nx: number;
+        let ny: number;
+        let left_dir = (this.dir + 3) % 4
+        let forward_dir = this.dir
+        let right_dir = (this.dir + 1) % 4
+        let back_dir = (this.dir + 2) % 4
+        for (let direction of [left_dir, forward_dir, right_dir, back_dir]) {
+            let [dx, dy] = this.directions[direction]
+            nx = this.x_pos + dx
+            ny = this.y_pos + dy
+            if (MAZE[ny][nx] == 0) {
+                this.x_pos = nx
+                this.y_pos = ny
+                this.dir = direction
+                break
+            }
+            
+        }
+    }
+    
+    public spawn() {
+        let x: number;
+        let y: number;
+        while (true) {
+            x = randint(1, MAZE[0].length - 2)
+            y = randint(1, MAZE.length - 2)
+            if (MAZE[y][x] == 0) {
+                MAZE[y][x] = 3
+                break
+            }
+            
+        }
+    }
+    
+    public attackPlayer(x_pos: number, y_pos: number) {
+        if (this.x == x_pos && this.y == y_pos) {
+            player.update_hp(-1)
+        }
+        
     }
     
 }
@@ -396,17 +457,19 @@ class Comunicator {
 
 let player = new Player()
 let comunicator = new Comunicator()
-let MONSTERS = [new Monster("Zombie", 3, 1), new Monster("Skeleton", 3, 2)]
 let mazeGen = new MazeGenerator()
 // button = Buttons()
 let last_time = 0
 let x_timer = new Timer()
 let y_timer = new Timer()
+let monsterTimer = new Timer()
 let game_loop = true
+let monster = new Monster()
 function setup() {
     mazeGen.new_level()
     player.show_hp()
     let last_time = control.millis()
+    monster.spawn()
     return
 }
 
@@ -415,6 +478,14 @@ while (game_loop) {
     now = control.millis()
     delta = now - last_time
     last_time = now
+    if (monsterTimer.timeElapsedMonster(delta)) {
+        MAZE[monster.y][monster.x] = 0
+        // ERROR: unreferencing a null pointer
+        monster.move()
+        monster.attackPlayer(player.x, player.y)
+        MAZE[monster.y][monster.x] = 3
+    }
+    
     if (joystickbit.getRockerValue(joystickbit.rockerType.X) < 450 && x_timer.timeElapsed(delta)) {
         player.move(1, 0)
         mazeGen.displayMap()

@@ -178,6 +178,7 @@ class MazeGenerator:
         self.select_exits()
 
         player.reset_player()
+        monster.spawn()
         # for i in range(self.size):
         #     row = ""
         #     for j in range(self.size):
@@ -209,12 +210,21 @@ class MazeGenerator:
 class Timer:
     def __init__(self):
         self.repeatInterval = 500
+        self.monsterInterval = 1000
         self.lastSignal = 0
+        self.lastChange = 0
 
     def timeElapsed(self, current_delta):
         self.lastSignal += current_delta
         if self.lastSignal >= self.repeatInterval:
             self.lastSignal = 0
+            return True
+        return False
+    
+    def timeElapsedMonster(self, current_delta):
+        self.lastChange += current_delta
+        if self.lastChange >= self.monsterInterval:
+            self.lastChange = 0
             return True
         return False
 
@@ -294,10 +304,41 @@ class Player: #Everything connected to player
             self.y = new_y
 
 class Monster: #Class for every monster
-    def __init__(self, name, hp, attack):
-        self.name = name
-        self.hp = hp
-        self.attack = attack
+    def __init__(self):
+        self.x = -1
+        self.y = -1
+        self.directions = [[0, -1], [1, 0], [0, 1], [-1, 0]]
+        self.dir = 0
+
+    def move(self):
+            left_dir = (self.dir + 3) % 4
+            forward_dir = self.dir
+            right_dir = (self.dir + 1) % 4
+            back_dir = (self.dir + 2) % 4
+
+            for direction in [left_dir, forward_dir, right_dir, back_dir]:
+                dx, dy = self.directions[direction]
+                nx = self.x_pos + dx
+                ny = self.y_pos + dy
+
+                if MAZE[ny][nx] == 0:
+                    self.x_pos = nx
+                    self.y_pos = ny
+                    self.dir = direction
+                    break
+        
+    def spawn(self):
+        while True:
+            x = randint(1, len(MAZE[0]) - 2)
+            y = randint(1, len(MAZE) - 2)
+            if MAZE[y][x] == 0:
+                MAZE[y][x] = 3
+                break
+    
+    def attackPlayer(self, x_pos, y_pos):
+        if self.x == x_pos and self.y == y_pos:
+            player.update_hp(-1)
+
 
 class Comunicator: #Handle comunication between Microbits
     def __init__(self):
@@ -313,19 +354,22 @@ class Comunicator: #Handle comunication between Microbits
 
 player = Player()
 comunicator = Comunicator()
-MONSTERS = [Monster("Zombie", 3, 1), Monster("Skeleton", 3, 2)]
 mazeGen = MazeGenerator()
 #button = Buttons()
 
 last_time = 0
 x_timer = Timer()
 y_timer = Timer()
+monsterTimer = Timer()
 game_loop = True
+monster = Monster()
+
 
 def setup():
     mazeGen.new_level()
     player.show_hp()
     last_time = control.millis()
+    monster.spawn()
     return
 
 setup()
@@ -333,6 +377,13 @@ while game_loop:
     now = control.millis()
     delta = now - last_time
     last_time = now
+
+    if monsterTimer.timeElapsedMonster(delta):
+        MAZE[monster.y][monster.x] = 0 #ERROR: unreferencing a null pointer
+        monster.move()
+        monster.attackPlayer(player.x, player.y)
+        MAZE[monster.y][monster.x] = 3
+        
 
     if (joystickbit.get_rocker_value(joystickbit.rockerType.X) < 450 and x_timer.timeElapsed(delta)):
         player.move(1, 0)
