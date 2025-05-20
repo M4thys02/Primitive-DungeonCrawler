@@ -2,14 +2,18 @@ let now: number;
 let delta: number;
 joystickbit.initJoystickBit()
 // Initialize joystickbit
+let MAZE = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+let VISITED = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+let dirs = [[0, 0]]
+let neighbors2 = [[0, 0]]
 class MazeGenerator {
     microbitsLEDS: number
     segments: number
     exits_coordinates: number[][]
     num_exits: number
     size: number
-    maze: any[]
-    visited: any[]
+    maze: number[][]
+    visited: number[][]
     start_x: number
     start_y: number
     constructor() {
@@ -19,8 +23,8 @@ class MazeGenerator {
         //  Middle coor of exit in order: UL, LL, UR, LR, up left, up right
         this.num_exits = 6
         this.size = 10
-        this.maze = []
-        this.visited = []
+        this.maze = MAZE
+        this.visited = VISITED
         this.start_x = 6
         this.start_y = 8
     }
@@ -35,10 +39,10 @@ class MazeGenerator {
         let nx: any;
         let ny: any;
         let result = []
-        let dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]]
-        for (let i = 0; i < dirs.length; i++) {
-            dx = dirs[i][0]
-            dy = dirs[i][1]
+        let directions = [[-1, 0], [1, 0], [0, -1], [0, 1]]
+        for (let i = 0; i < directions.length; i++) {
+            dx = directions[i][0]
+            dy = directions[i][1]
             nx = x + dx
             ny = y + dy
             if (this.in_bounds(nx, ny)) {
@@ -51,17 +55,15 @@ class MazeGenerator {
     
     public dfs(x: number, y: number) {
         let j: number;
-        let tmp: any;
+        let tmp: number[];
         let nx: number;
         let ny: number;
         let count: number;
-        let neighbors2: any[];
         let nx2: number;
         let ny2: number;
-        this.visited[y][x] = 1
-        this.maze[y][x] = 0
-        //  free position
-        let dirs = []
+        MAZE[y][x] = 0
+        VISITED[y][x] = 1
+        _py.py_array_clear(dirs)
         for (let n of this.neighbors(x, y)) {
             dirs.push(n)
         }
@@ -74,17 +76,20 @@ class MazeGenerator {
             dirs[j] = tmp
             i -= 1
         }
-        for (i = 0; i < dirs.length; i++) {
-            nx = dirs[i][0]
-            ny = dirs[i][1]
-            if (!this.visited[ny][nx]) {
+        for (let d of dirs.slice(0)) {
+            nx = d[0]
+            ny = d[1]
+            if (!VISITED[ny][nx]) {
                 //  Carve path only if it leads to unvisited area
                 count = 0
-                neighbors2 = this.neighbors(nx, ny)
+                _py.py_array_clear(neighbors2)
+                for (let m of this.neighbors(nx, ny)) {
+                    neighbors2.push(m)
+                }
                 for (j = 0; j < neighbors2.length; j++) {
-                    nx2 = parseInt(neighbors2[j][0])
-                    ny2 = parseInt(neighbors2[j][1])
-                    if (this.visited[ny2][nx2]) {
+                    nx2 = neighbors2[j][0]
+                    ny2 = neighbors2[j][1]
+                    if (VISITED[ny2][nx2]) {
                         count += 1
                     }
                     
@@ -100,52 +105,55 @@ class MazeGenerator {
     
     public generate_connected_maze() {
         let y: number;
-        let row: any[];
         let x: number;
         //  Fill maze with wall
-        this.maze = []
         for (y = 0; y < this.size; y++) {
-            row = []
             for (x = 0; x < this.size; x++) {
-                row.push(1)
+                MAZE[y][x] = 1
             }
-            this.maze.push(row)
         }
-        this.visited = []
         for (y = 0; y < this.size; y++) {
-            row = []
             for (x = 0; x < this.size; x++) {
-                row.push(0)
+                VISITED[y][x] = 0
             }
-            this.visited.push(row)
         }
         this.dfs(this.start_x, this.start_y)
+        MAZE[this.start_y + 1][this.start_x] = 0
     }
     
-    public select_exits() {
-        let i: number;
-        let index: number;
-        let candidates = this.exits_coordinates.slice(0)
-        let selected = []
-        let used_indexes = []
-        for (i = 0; i < this.num_exits; i++) {
-            index = randint(0, this.num_exits - 1)
-            selected.push(candidates[index])
-            if (used_indexes.indexOf(index) < 0) {
-                used_indexes.push(index)
-                selected.push(this.exits_coordinates[index])
-            }
-            
-        }
-        for (i = 0; i < selected.length; i++) {
-            this.maze[selected[i][0]][selected[i][1]] = 0
-        }
-    }
-    
+    //  def select_exits(self):
+    //      candidates = self.exits_coordinates[:]
+    //      selected = []
+    //      used_indexes = []
+    //      for i in range(self.num_exits):
+    //          index = randint(0, self.num_exits - 1)
+    //          coord = candidates[index]
+    //          y = coord[0]
+    //          x = coord[1]
+    //          # Zkontroluj, zda alespoň jeden soused není zeď
+    //          valid = False
+    //          if y > 0 and MAZE[y - 1][x] == 0:
+    //              valid = True
+    //          if y < self.size - 1 and MAZE[y + 1][x] == 0:
+    //              valid = True
+    //          if x > 0 and MAZE[y][x - 1] == 0:
+    //              valid = True
+    //          if x < self.size - 1 and MAZE[y][x + 1] == 0:
+    //              valid = True
+    //          if valid and index not in used_indexes:
+    //              used_indexes.append(index)
+    //              selected.append([y, x])
+    //          if valid and index not in used_indexes:
+    //              used_indexes.append(index)
+    //              selected.append(coord)
+    //      for i in range(len(selected)):
+    //          y = selected[i][0]
+    //          x = selected[i][1]
+    //          MAZE[y][x] = 0
     public displayMap() {
         let rowA: string;
         let rowB: string;
-        let val: any;
+        let val: number;
         for (let i = 0; i < this.size; i++) {
             rowA = ""
             rowB = ""
@@ -181,11 +189,9 @@ class MazeGenerator {
     //  Lower right
     public new_level() {
         this.generate_connected_maze()
-        for (let i = 0; i < this.size; i++) {
-            serial.writeLine("" + this.maze[i])
-        }
         player.reset_player()
-        this.select_exits()
+        //  self.select_exits()
+        console.log(MAZE[0][0])
         this.displayMap()
     }
     

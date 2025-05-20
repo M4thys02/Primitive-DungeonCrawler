@@ -1,5 +1,32 @@
 joystickbit.init_joystick_bit() #Initialize joystickbit
 
+MAZE = [[0,0,0,0,0, 0,0,0,0,0],
+        [0,0,0,0,0, 0,0,0,0,0],
+        [0,0,0,0,0, 0,0,0,0,0],
+        [0,0,0,0,0, 0,0,0,0,0],
+        [0,0,0,0,0, 0,0,0,0,0],
+        
+        [0,0,0,0,0, 0,0,0,0,0],
+        [0,0,0,0,0, 0,0,0,0,0],
+        [0,0,0,0,0, 0,0,0,0,0],
+        [0,0,0,0,0, 0,0,0,0,0],
+        [0,0,0,0,0, 0,0,0,0,0]]
+
+VISITED = [[0,0,0,0,0, 0,0,0,0,0],
+            [0,0,0,0,0, 0,0,0,0,0],
+            [0,0,0,0,0, 0,0,0,0,0],
+            [0,0,0,0,0, 0,0,0,0,0],
+            [0,0,0,0,0, 0,0,0,0,0],
+            
+            [0,0,0,0,0, 0,0,0,0,0],
+            [0,0,0,0,0, 0,0,0,0,0],
+            [0,0,0,0,0, 0,0,0,0,0],
+            [0,0,0,0,0, 0,0,0,0,0],
+            [0,0,0,0,0, 0,0,0,0,0]]
+
+dirs = [[0,0]]
+neighbors2 = [[0,0]]
+
 class MazeGenerator:
     def __init__(self):
         self.microbitsLEDS = 5
@@ -7,8 +34,8 @@ class MazeGenerator:
         self.exits_coordinates = [[2,0],[7,0],[2,9],[7,9],[0,2],[0,7]] # Middle coor of exit in order: UL, LL, UR, LR, up left, up right
         self.num_exits = 6
         self.size = 10
-        self.maze = []
-        self.visited = []
+        self.maze = MAZE
+        self.visited = VISITED
         self.start_x = 6
         self.start_y = 8
 
@@ -17,10 +44,10 @@ class MazeGenerator:
 
     def neighbors(self, x, y):
         result = []
-        dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]]
-        for i in range(len(dirs)):
-            dx = dirs[i][0]
-            dy = dirs[i][1]
+        directions = [[-1, 0], [1, 0], [0, -1], [0, 1]]
+        for i in range(len(directions)):
+            dx = directions[i][0]
+            dy = directions[i][1]
             nx = x + dx
             ny = y + dy
             if self.in_bounds(nx, ny):
@@ -28,10 +55,10 @@ class MazeGenerator:
         return result
 
     def dfs(self, x, y):
-        self.visited[y][x] = 1
-        self.maze[y][x] = 0  # free position
+        MAZE[y][x] = 0
+        VISITED[y][x] = 1
 
-        dirs = []
+        dirs.clear()
         for n in self.neighbors(x, y):
             dirs.append(n)
 
@@ -43,17 +70,19 @@ class MazeGenerator:
             dirs[j] = tmp
             i -= 1
 
-        for i in range(len(dirs)):
-            nx = dirs[i][0]
-            ny = dirs[i][1]
-            if not self.visited[ny][nx]:
+        for d in dirs[:]:
+            nx = d[0]
+            ny = d[1]
+            if not VISITED[ny][nx]:
                 # Carve path only if it leads to unvisited area
                 count = 0
-                neighbors2 = self.neighbors(nx, ny)
+                neighbors2.clear()
+                for m in self.neighbors(nx, ny):
+                    neighbors2.append(m)
                 for j in range(len(neighbors2)):
-                    nx2 = int(neighbors2[j][0])
-                    ny2 = int(neighbors2[j][1])
-                    if self.visited[ny2][nx2]:
+                    nx2 = neighbors2[j][0]
+                    ny2 = neighbors2[j][1]
+                    if VISITED[ny2][nx2]:
                         count += 1
 
                 if count <= 1:
@@ -61,36 +90,52 @@ class MazeGenerator:
 
     def generate_connected_maze(self):
         # Fill maze with wall
-        self.maze = []
+        
         for y in range(self.size):
-            row = []
             for x in range(self.size):
-                row.append(1)
-            self.maze.append(row)
+                MAZE[y][x] = 1
 
-        self.visited = []
         for y in range(self.size):
-            row = []
             for x in range(self.size):
-                row.append(0)
-            self.visited.append(row)
+                VISITED[y][x] = 0
 
         self.dfs(self.start_x, self.start_y)
+        MAZE[self.start_y + 1][self.start_x] = 0
 
-    def select_exits(self):
-            candidates = self.exits_coordinates[:]
-            selected = []
-            used_indexes = []
+    # def select_exits(self):
+    #     candidates = self.exits_coordinates[:]
+    #     selected = []
+    #     used_indexes = []
 
-            for i in range(self.num_exits):
-                index = randint(0, self.num_exits - 1)
-                selected.append(candidates[index])
-                if index not in used_indexes:
-                    used_indexes.append(index)
-                    selected.append(self.exits_coordinates[index])
-            
-            for i in range(len(selected)):
-                self.maze[selected[i][0]][selected[i][1]] = 0
+    #     for i in range(self.num_exits):
+    #         index = randint(0, self.num_exits - 1)
+    #         coord = candidates[index]
+    #         y = coord[0]
+    #         x = coord[1]
+
+    #         # Zkontroluj, zda alespoň jeden soused není zeď
+    #         valid = False
+    #         if y > 0 and MAZE[y - 1][x] == 0:
+    #             valid = True
+    #         if y < self.size - 1 and MAZE[y + 1][x] == 0:
+    #             valid = True
+    #         if x > 0 and MAZE[y][x - 1] == 0:
+    #             valid = True
+    #         if x < self.size - 1 and MAZE[y][x + 1] == 0:
+    #             valid = True
+
+    #         if valid and index not in used_indexes:
+    #             used_indexes.append(index)
+    #             selected.append([y, x])
+
+    #         if valid and index not in used_indexes:
+    #             used_indexes.append(index)
+    #             selected.append(coord)
+
+    #     for i in range(len(selected)):
+    #         y = selected[i][0]
+    #         x = selected[i][1]
+    #         MAZE[y][x] = 0
     
     def displayMap(self):
         for i in range(self.size):
@@ -118,11 +163,10 @@ class MazeGenerator:
     
     def new_level(self):
         self.generate_connected_maze()
-        for i in range(self.size):
-            serial.write_line(str(self.maze[i]))
 
         player.reset_player()
-        self.select_exits()
+        # self.select_exits()
+        print(MAZE[0][0])
         self.displayMap()
 
 # class Buttons:
