@@ -382,8 +382,6 @@ class Monster {
     y: number
     directions: number[][]
     dir: number
-    x_pos: number
-    y_pos: number
     // Class for every monster
     constructor() {
         this.x = -1
@@ -401,11 +399,11 @@ class Monster {
         let back_dir = (this.dir + 2) % 4
         for (let direction of [left_dir, forward_dir, right_dir, back_dir]) {
             let [dx, dy] = this.directions[direction]
-            nx = this.x_pos + dx
-            ny = this.y_pos + dy
+            nx = this.x + dx
+            ny = this.y + dy
             if (MAZE[ny][nx] == 0) {
-                this.x_pos = nx
-                this.y_pos = ny
+                this.x = nx
+                this.y = ny
                 this.dir = direction
                 break
             }
@@ -414,13 +412,11 @@ class Monster {
     }
     
     public spawn() {
-        let x: number;
-        let y: number;
         while (true) {
-            x = randint(1, MAZE[0].length - 2)
-            y = randint(1, MAZE.length - 2)
-            if (MAZE[y][x] == 0) {
-                MAZE[y][x] = 3
+            this.x = randint(1, MAZE[0].length - 2)
+            this.y = randint(1, MAZE.length - 2)
+            if (MAZE[this.y][this.x] == 0) {
+                MAZE[this.y][this.x] = 3
                 break
             }
             
@@ -480,7 +476,6 @@ while (game_loop) {
     last_time = now
     if (monsterTimer.timeElapsedMonster(delta)) {
         MAZE[monster.y][monster.x] = 0
-        // ERROR: unreferencing a null pointer
         monster.move()
         monster.attackPlayer(player.x, player.y)
         MAZE[monster.y][monster.x] = 3

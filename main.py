@@ -318,21 +318,21 @@ class Monster: #Class for every monster
 
             for direction in [left_dir, forward_dir, right_dir, back_dir]:
                 dx, dy = self.directions[direction]
-                nx = self.x_pos + dx
-                ny = self.y_pos + dy
+                nx = self.x + dx
+                ny = self.y + dy
 
                 if MAZE[ny][nx] == 0:
-                    self.x_pos = nx
-                    self.y_pos = ny
+                    self.x = nx
+                    self.y = ny
                     self.dir = direction
                     break
         
     def spawn(self):
         while True:
-            x = randint(1, len(MAZE[0]) - 2)
-            y = randint(1, len(MAZE) - 2)
-            if MAZE[y][x] == 0:
-                MAZE[y][x] = 3
+            self.x = randint(1, len(MAZE[0]) - 2)
+            self.y = randint(1, len(MAZE) - 2)
+            if MAZE[self.y][self.x] == 0:
+                MAZE[self.y][self.x] = 3
                 break
     
     def attackPlayer(self, x_pos, y_pos):
@@ -379,7 +379,7 @@ while game_loop:
     last_time = now
 
     if monsterTimer.timeElapsedMonster(delta):
-        MAZE[monster.y][monster.x] = 0 #ERROR: unreferencing a null pointer
+        MAZE[monster.y][monster.x] = 0
         monster.move()
         monster.attackPlayer(player.x, player.y)
         MAZE[monster.y][monster.x] = 3
