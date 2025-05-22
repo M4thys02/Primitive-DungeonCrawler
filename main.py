@@ -268,7 +268,8 @@ class Player: #Everything connected to player
         if (self.hp + change > (len(self.hitpoints_pictures) - 1)):
             pass
         elif (self.hp + change < 0):
-            pass
+            music.play(music.string_playable("A", 120), music.PlaybackMode.UNTIL_DONE)
+            setup()
         else:
             self.hp += change
 
@@ -302,6 +303,8 @@ class Player: #Everything connected to player
             mazeGen.maze[new_y][new_x] = 2 #player is number 2
             self.x = new_x
             self.y = new_y
+        elif (mazeGen.maze[new_y][new_x] == 3):
+            self.update_hp(-1)
 
 class Monster: #Class for every monster
     def __init__(self):
@@ -321,10 +324,13 @@ class Monster: #Class for every monster
                 nx = self.x + dx
                 ny = self.y + dy
 
-                if MAZE[ny][nx] == 0:
+                if (0 <= nx < len(MAZE[0]) and 0 <= ny < len(MAZE) and MAZE[ny][nx] == 0):
                     self.x = nx
                     self.y = ny
                     self.dir = direction
+                    break
+                elif (0 <= nx < len(MAZE[0]) and 0 <= ny < len(MAZE) and MAZE[ny][nx] == 2):
+                    player.update_hp(-1)
                     break
         
     def spawn(self):
@@ -334,10 +340,6 @@ class Monster: #Class for every monster
             if MAZE[self.y][self.x] == 0:
                 MAZE[self.y][self.x] = 3
                 break
-    
-    def attackPlayer(self, x_pos, y_pos):
-        if self.x == x_pos and self.y == y_pos:
-            player.update_hp(-1)
 
 
 class Comunicator: #Handle comunication between Microbits
@@ -381,8 +383,8 @@ while game_loop:
     if monsterTimer.timeElapsedMonster(delta):
         MAZE[monster.y][monster.x] = 0
         monster.move()
-        monster.attackPlayer(player.x, player.y)
         MAZE[monster.y][monster.x] = 3
+        mazeGen.displayMap()
         
 
     if (joystickbit.get_rocker_value(joystickbit.rockerType.X) < 450 and x_timer.timeElapsed(delta)):

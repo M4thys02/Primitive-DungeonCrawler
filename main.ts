@@ -331,7 +331,8 @@ class Player {
         if (this.hp + change > this.hitpoints_pictures.length - 1) {
             
         } else if (this.hp + change < 0) {
-            
+            music.play(music.stringPlayable("A", 120), music.PlaybackMode.UntilDone)
+            setup()
         } else {
             this.hp += change
         }
@@ -371,6 +372,8 @@ class Player {
             // player is number 2
             this.x = new_x
             this.y = new_y
+        } else if (mazeGen.maze[new_y][new_x] == 3) {
+            this.update_hp(-1)
         }
         
     }
@@ -401,10 +404,13 @@ class Monster {
             let [dx, dy] = this.directions[direction]
             nx = this.x + dx
             ny = this.y + dy
-            if (MAZE[ny][nx] == 0) {
+            if (0 <= nx && nx < MAZE[0].length && (0 <= ny && ny < MAZE.length) && MAZE[ny][nx] == 0) {
                 this.x = nx
                 this.y = ny
                 this.dir = direction
+                break
+            } else if (0 <= nx && nx < MAZE[0].length && (0 <= ny && ny < MAZE.length) && MAZE[ny][nx] == 2) {
+                player.update_hp(-1)
                 break
             }
             
@@ -421,13 +427,6 @@ class Monster {
             }
             
         }
-    }
-    
-    public attackPlayer(x_pos: number, y_pos: number) {
-        if (this.x == x_pos && this.y == y_pos) {
-            player.update_hp(-1)
-        }
-        
     }
     
 }
@@ -477,8 +476,8 @@ while (game_loop) {
     if (monsterTimer.timeElapsedMonster(delta)) {
         MAZE[monster.y][monster.x] = 0
         monster.move()
-        monster.attackPlayer(player.x, player.y)
         MAZE[monster.y][monster.x] = 3
+        mazeGen.displayMap()
     }
     
     if (joystickbit.getRockerValue(joystickbit.rockerType.X) < 450 && x_timer.timeElapsed(delta)) {
